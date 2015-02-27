@@ -22,8 +22,10 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
     title: string;
     currentBounds: any;
     isFirstLoad: boolean = true;
+    controlsVisible: boolean = false;
 
     $viewer: JQuery;
+    $spinner: JQuery;
     $rights: JQuery;
     $closeRightsBtn: JQuery;
     $prevButton: JQuery;
@@ -56,6 +58,9 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
         this.$viewer = $('<div id="viewer"></div>');
         this.$content.append(this.$viewer);
 
+        this.$spinner = $('<div class="spinner"></div>');
+        this.$content.append(this.$spinner);
+
         this.$rights = $('<div class="rights">\
                                <div class="header">\
                                    <div class="title"></div>\
@@ -75,6 +80,12 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
         this.$closeRightsBtn.on('click', (e) => {
             e.preventDefault();
             this.$rights.hide();
+        });
+
+        // events
+
+        $.subscribe(baseExtension.BaseExtension.OPEN_MEDIA, (e, uri) => {
+            this.loadTileSources();
         });
 
         this.createSeadragonViewer();
@@ -97,23 +108,25 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
 
         // events
 
-        $.subscribe(baseExtension.BaseExtension.OPEN_MEDIA, (e, uri) => {
-            this.loadTileSources();
-        });
-
         this.$element.on('mousemove', (e) => {
-            this.viewer.showControls();
+            if (this.controlsVisible) return;
+            this.controlsVisible = true;
+            this.viewer.setControlsEnabled(true);
         });
 
-        //this.$element.on('mouseleave', (e) => {
-        //    this.viewer.hideControls();
-        //});
+        this.$element.on('mouseleave', (e) => {
+            if (!this.controlsVisible) return;
+            this.controlsVisible = false;
+            this.viewer.setControlsEnabled(false);
+        });
 
         // when mouse move stopped
         this.$element.on('mousemove', (e) => {
             // if over element, hide controls.
             if (!this.$viewer.find('.navigator').ismouseover()){
-                this.viewer.hideControls();
+                if (!this.controlsVisible) return;
+                this.controlsVisible = false;
+                this.viewer.setControlsEnabled(false);
             }
         }, this.config.options.controlsFadeAfterInactive);
 
@@ -150,27 +163,30 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
         this.createNavigationButtons();
 
         // if firefox, hide rotation and prev/next until this is resolved
-        var browser = window.browserDetect.browser;
+        //var browser = window.browserDetect.browser;
 
-        if (browser == 'Firefox') {
-            if (this.provider.isMultiCanvas()){
-                this.$prevButton.hide();
-                this.$nextButton.hide();
-            }
-            this.$rotateButton.hide();
-        }
+        //if (browser == 'Firefox') {
+        //    if (this.provider.isMultiCanvas()){
+        //        this.$prevButton.hide();
+        //        this.$nextButton.hide();
+        //    }
+        //    this.$rotateButton.hide();
+        //}
 
-        this.showRights();
+        this.showAttribution();
 
+        this.resize();
     }
 
     createSeadragonViewer(): void {
+        //console.log("create viewer");
+
         // todo: use compiler flag (when available)
         var prefixUrl = (window.DEBUG)? 'modules/uv-seadragoncenterpanel-module/img/' : 'themes/' + this.provider.config.options.theme + '/img/uv-seadragoncenterpanel-module/';
 
-        this.viewer = OpenSeadragon({
+        // add to window object for testing automation purposes.
+        window.openSeadragonViewer = this.viewer = OpenSeadragon({
             id: "viewer",
-            autoHideControls: true,
             showNavigationControl: true,
             showNavigator: true,
             showRotationControl: true,
@@ -285,6 +301,29 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
         }
     }
 
+    loadTileSources(): void {
+
+        // viewer may not have initialised yet
+        if (!this.viewer) return;
+
+        this.tileSources = this.provider.getTileSources();
+
+        this.$spinner.show();
+
+        // todo: use compiler flag (when available)
+        var imageUnavailableUri = (window.DEBUG)? '/src/extensions/uv-seadragon-extension/js/imageunavailable.js' : 'js/imageunavailable.js';
+
+        _.each(this.tileSources, function(ts) {
+            if (!ts.tileSource){
+                ts.tileSource = imageUnavailableUri
+            }
+        });
+
+        this.viewer.addHandler('open', this.openTileSourcesHandler, this);
+
+        this.viewer.open(this.tileSources[0]);
+    }
+
     openTileSourcesHandler() {
 
         var that = this.userData;
@@ -338,9 +377,10 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
 
         that.lastTilesNum = that.tileSources.length;
         that.isFirstLoad = false;
+        that.$spinner.hide();
     }
 
-    showRights(): void {
+    showAttribution(): void {
         var attribution = this.provider.getAttribution();
         //var license = this.provider.getLicense();
         //var logo = this.provider.getLogo();
@@ -396,23 +436,6 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
         }
     }
 
-    loadTileSources(): void {
-        this.tileSources = this.provider.getTileSources();
-
-        // todo: use compiler flag (when available)
-        var imageUnavailableUri = (window.DEBUG)? '/src/extensions/uv-seadragon-extension/js/imageunavailable.js' : 'js/imageunavailable.js';
-
-        _.each(this.tileSources, function(ts) {
-            if (!ts.tileSource){
-                ts.tileSource = imageUnavailableUri
-            }
-        });
-
-        this.viewer.open(this.tileSources[0]);
-
-        this.viewer.addHandler('open', this.openTileSourcesHandler, this);
-    }
-
     disablePrevButton () {
         this.prevButtonEnabled = false;
         this.$prevButton.addClass('disabled');
@@ -461,7 +484,7 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
 
     getBounds(): any {
 
-        if (!this.viewer.viewport) return null;
+        if (!this.viewer || !this.viewer.viewport) return null;
 
         var bounds = this.viewer.viewport.getBounds(true);
 
@@ -487,18 +510,26 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
     }
 
     resize(): void {
+        //console.log("resize");
+
         super.resize();
 
         this.$title.ellipsisFill(this.title);
 
-        this.$viewer.height(this.$content.height());
+        this.$viewer.height(this.$content.height() - this.$viewer.verticalMargins());
+        this.$viewer.width(this.$content.width() - this.$viewer.horizontalMargins());
 
-        if (this.provider.isMultiCanvas()) {
+        if (this.currentBounds) this.fitToBounds(this.currentBounds);
+
+        this.$spinner.css('top', (this.$content.height() / 2) - (this.$spinner.height() / 2));
+        this.$spinner.css('left', (this.$content.width() / 2) - (this.$spinner.width() / 2));
+
+        if (this.provider.isMultiCanvas() && this.$prevButton && this.$nextButton) {
             this.$prevButton.css('top', (this.$content.height() - this.$prevButton.height()) / 2);
             this.$nextButton.css('top', (this.$content.height() - this.$nextButton.height()) / 2);
         }
 
-        if (this.$rights.is(':visible')){
+        if (this.$rights && this.$rights.is(':visible')){
             this.$rights.css('top', this.$content.height() - this.$rights.outerHeight() - this.$rights.verticalMargins());
         }
     }

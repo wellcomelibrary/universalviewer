@@ -1,13 +1,14 @@
 /// <reference path="../../js/jquery.d.ts" />
 /// <reference path="../../js/extensions.d.ts" />
+import BootStrapper = require("../../bootstrapper");
 import baseProvider = require("../../modules/uv-shared-module/baseProvider");
 import utils = require("../../utils");
 import IMediaElementProvider = require("./iMediaElementProvider");
 
 export class Provider extends baseProvider.BaseProvider implements IMediaElementProvider{
 
-    constructor(config: any, manifest: any) {
-        super(config, manifest);
+    constructor(bootstrapper: BootStrapper, config: any, manifest: any) {
+        super(bootstrapper, config, manifest);
 
         this.config.options = $.extend(true, this.options, {
             // override or extend BaseProvider options.
@@ -23,7 +24,7 @@ export class Provider extends baseProvider.BaseProvider implements IMediaElement
 
         var configUri = this.config.uri || '';
 
-        var script = String.prototype.format(template, this.dataUri, this.sequenceIndex, configUri, width, height, esu);
+        var script = String.prototype.format(template, this.manifestUri, this.sequenceIndex, configUri, width, height, esu);
 
         return script;
     }

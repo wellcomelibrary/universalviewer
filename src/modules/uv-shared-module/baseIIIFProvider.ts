@@ -1,9 +1,12 @@
 /// <reference path="../../js/jquery.d.ts" />
 /// <reference path="../../js/extensions.d.ts" />
+import BootStrapper = require("../../bootstrapper");
+import BootstrapParams = require("../../bootstrapParams");
 import utils = require("../../utils");
 import IProvider = require("./iProvider");
 import TreeNode = require("./treeNode");
 import Thumb = require("./thumb");
+import util = utils.Utils;
 
 export enum params {
     sequenceIndex,
@@ -18,9 +21,10 @@ export enum params {
 // for extensions to operate against.
 export class BaseProvider implements IProvider{
 
+    bootstrapper: BootStrapper;
     canvasIndex: number;
     config: any;
-    dataUri: string;
+    manifestUri: string;
     domain: string;
     embedScriptUri: string;
     embedDomain: string;
@@ -34,6 +38,7 @@ export class BaseProvider implements IProvider{
     sequenceIndex: number;
     treeRoot: TreeNode;
     jsonp: boolean;
+    locale: string;
 
     // map param names to enum indices.
     paramMap: string[] = ['si', 'ci', 'z', 'r'];
@@ -44,31 +49,32 @@ export class BaseProvider implements IProvider{
         mediaUriTemplate: "{0}{1}"
     };
 
-    constructor(config: any, manifest: any) {
+    constructor(bootstrapper: BootStrapper, config: any, manifest: any) {
+        this.bootstrapper = bootstrapper;
         this.config = config;
         this.manifest = manifest;
 
-        // add dataBaseUri to options so it can be overridden.
-        this.options.dataBaseUri = utils.Utils.getQuerystringParameter('dbu');
-
         // get data-attributes that can't be overridden by hash params.
         // other data-attributes are retrieved through app.getParam.
-        this.dataUri = utils.Utils.getQuerystringParameter('du');
-        this.embedDomain = utils.Utils.getQuerystringParameter('ed');
-        this.isHomeDomain = utils.Utils.getQuerystringParameter('hd') === "true";
-        this.isOnlyInstance = utils.Utils.getQuerystringParameter('oi') === "true";
-        this.embedScriptUri = utils.Utils.getQuerystringParameter('esu');
-        this.isReload = utils.Utils.getQuerystringParameter('rl') === "true";
-        this.domain = utils.Utils.getQuerystringParameter('d');
-        this.isLightbox = utils.Utils.getQuerystringParameter('lb') === "true";
-        this.jsonp = utils.Utils.getQuerystringParameter('jsonp') === "true";
+
+        // todo: make these getters when ES5 target is available
+        this.manifestUri = this.bootstrapper.params.manifestUri;
+        this.jsonp = this.bootstrapper.params.jsonp;
+        this.locale = this.bootstrapper.params.locale;
+        this.isHomeDomain = this.bootstrapper.params.isHomeDomain;
+        this.isReload = this.bootstrapper.params.isReload;
+        this.embedDomain = this.bootstrapper.params.embedDomain;
+        this.isOnlyInstance = this.bootstrapper.params.isOnlyInstance;
+        this.embedScriptUri = this.bootstrapper.params.embedScriptUri;
+        this.domain = this.bootstrapper.params.domain;
+        this.isLightbox = this.bootstrapper.params.isLightbox;
 
         if (this.isHomeDomain && !this.isReload){
-            this.sequenceIndex = parseInt(utils.Utils.getHashParameter(this.paramMap[params.sequenceIndex], parent.document));
+            this.sequenceIndex = parseInt(util.getHashParameter(this.paramMap[params.sequenceIndex], parent.document));
         }
 
         if (!this.sequenceIndex){
-            this.sequenceIndex = parseInt(utils.Utils.getQuerystringParameter(this.paramMap[params.sequenceIndex])) || 0;
+            this.sequenceIndex = parseInt(util.getQuerystringParameter(this.paramMap[params.sequenceIndex])) || 0;
         }
 
         this.load();
@@ -93,17 +99,25 @@ export class BaseProvider implements IProvider{
         this.parseStructure();
     }
 
+    // re-bootstraps the application with new querystring params
+    reload(params?: BootstrapParams): void {
+        var p = new BootstrapParams();
+        p.isReload = true;
+
+        if (params){
+            p = $.extend(p, params);
+        }
+
+        this.bootstrapper.bootStrap(p);
+    }
+
     corsEnabled(): boolean {
         return Modernizr.cors && !this.jsonp
     }
 
-    reload(callback: any): void {
+    reloadManifest(callback: any): void {
 
-        var manifestUri = this.dataUri;
-
-        if (this.options.dataBaseUri){
-            manifestUri = this.options.dataBaseUri + this.dataUri;
-        }
+        var manifestUri = this.manifestUri;
 
         manifestUri = this.addTimestamp(manifestUri);
 
@@ -147,7 +161,7 @@ export class BaseProvider implements IProvider{
     }
 
     getAttribution(): string {
-        return this.manifest.attribution;
+        return this.getLocalisedValue(this.manifest.attribution);
     }
 
     getLicense(): string {
@@ -166,10 +180,6 @@ export class BaseProvider implements IProvider{
         return this.manifest.seeAlso;
     }
 
-    getCanvasLabel(canvas: any): string{
-        return canvas.label;
-    }
-
     getLastCanvasLabel(): string {
         // get the last label that isn't empty or '-'.
         for (var i = this.sequence.canvases.length - 1; i >= 0; i--) {
@@ -178,7 +188,7 @@ export class BaseProvider implements IProvider{
             var regExp = /\d/;
 
             if (regExp.test(canvas.label)) {
-                return canvas.label;
+                return this.getLocalisedValue(canvas.label);
             }
         }
 
@@ -344,7 +354,7 @@ export class BaseProvider implements IProvider{
     }
 
     addTimestamp(uri: string): string{
-        return uri + "?t=" + utils.Utils.getTimeStamp();
+        return uri + "?t=" + util.getTimeStamp();
     }
 
     isDeepLinkingEnabled(): boolean {
@@ -388,10 +398,41 @@ export class BaseProvider implements IProvider{
 
             var uri = this.getThumbUri(canvas, width, height);
 
-            thumbs.push(new Thumb(i, uri, canvas.label, width, height, true));
+            thumbs.push(new Thumb(i, uri, this.getLocalisedValue(canvas.label), width, height, true));
         }
 
         return thumbs;
+    }
+
+    getLocalisedValue(prop: any): string {
+
+        if (!(prop instanceof Array)){
+            return prop;
+        }
+
+        // test for exact match
+        for (var i = 0; i < prop.length; i++){
+            var value = prop[i];
+            var language = value['@language'];
+
+            if (this.locale === language){
+                return <string>value['@value'];
+            }
+        }
+
+        // test for inexact match
+        for (var i = 0; i < prop.length; i++){
+            var value = prop[i];
+            var language = value['@language'];
+
+            var match = this.locale.substr(0, this.locale.indexOf('-'));
+
+            if (language === match){
+                return <string>value['@value'];
+            }
+        }
+
+        return null;
     }
 
     parseManifest(): void{
@@ -628,7 +669,7 @@ export class BaseProvider implements IProvider{
     }
 
     parseTreeNode(node: TreeNode, structure: any): void {
-        node.label = structure.label;
+        node.label = this.getLocalisedValue(structure.label);
         node.data = structure;
         node.data.type = "structure";
         structure.treeNode = node;
@@ -647,7 +688,7 @@ export class BaseProvider implements IProvider{
     }
 
     getDomain(): string{
-        var parts = utils.Utils.getUrlParts(this.dataUri);
+        var parts = util.getUrlParts(this.manifestUri);
         return parts.host;
     }
 
@@ -725,5 +766,9 @@ export class BaseProvider implements IProvider{
         $elem.html(s.clean_node(elem));
 
         return $elem.html();
+    }
+
+    getLocales(): any {
+        return this.config.localisation.locales;
     }
 }

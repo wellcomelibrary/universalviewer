@@ -4,18 +4,16 @@ import shell = require("../uv-shared-module/shell");
 import utils = require("../../utils");
 import dialogue = require("../uv-shared-module/dialogue");
 import version = require("../../_Version");
+import BootstrapParams = require("../../bootstrapParams");
 
 export class SettingsDialogue extends dialogue.Dialogue {
 
     $title: JQuery;
     $scroll: JQuery;
     $version: JQuery;
-    $pagingEnabled: JQuery;
-    $pagingEnabledTitle: JQuery;
-    $pagingEnabledCheckbox: JQuery;
-    $preserveViewport: JQuery;
-    $preserveViewportTitle: JQuery;
-    $preserveViewportCheckbox: JQuery;
+    $locale: JQuery;
+    $localeLabel: JQuery;
+    $localeDropDown: JQuery;
 
     static SHOW_SETTINGS_DIALOGUE: string = 'onShowSettingsDialogue';
     static HIDE_SETTINGS_DIALOGUE: string = 'onHideSettingsDialogue';
@@ -48,64 +46,34 @@ export class SettingsDialogue extends dialogue.Dialogue {
         this.$version = $('<div class="version"></div>');
         this.$content.append(this.$version);
 
-        this.$pagingEnabled = $('<div class="setting pagingEnabled"></div>');
-        this.$scroll.append(this.$pagingEnabled);
+        this.$locale = $('<div class="setting locale"></div>');
+        this.$scroll.append(this.$locale);
 
-            this.$pagingEnabledCheckbox = $('<input id="pagingEnabled" type="checkbox" />');
-            this.$pagingEnabled.append(this.$pagingEnabledCheckbox);
+            this.$localeLabel = $('<label for="locale">' + this.content.locale + '</label>');
+            this.$locale.append(this.$localeLabel);
 
-            this.$pagingEnabledTitle = $('<label for="pagingEnabled">' + this.content.pagingEnabled + '</label>');
-            this.$pagingEnabled.append(this.$pagingEnabledTitle);
-
-        this.$preserveViewport = $('<div class="setting preserveViewport"></div>');
-        this.$scroll.append(this.$preserveViewport);
-
-            this.$preserveViewportCheckbox = $('<input id="preserveViewport" type="checkbox" />');
-            this.$preserveViewport.append(this.$preserveViewportCheckbox);
-
-            this.$preserveViewportTitle = $('<label for="preserveViewport">' + this.content.preserveViewport + '</label>');
-            this.$preserveViewport.append(this.$preserveViewportTitle);
+            this.$localeDropDown = $('<select id="locale"></select>');
+            this.$locale.append(this.$localeDropDown);
 
         // initialise ui.
         this.$title.text(this.content.title);
 
-        var that = this;
-
         this.$version.text("v" + version.Version);
 
-        this.$pagingEnabledCheckbox.change(function() {
-            var settings: ISettings = that.getSettings();
+        var locales = this.provider.getLocales();
 
-            if($(this).is(":checked")) {
-                settings.pagingEnabled = true;
-            } else {
-                settings.pagingEnabled = false;
-            }
-
-            that.updateSettings(settings);
-        });
-
-        this.$preserveViewportCheckbox.change(function() {
-            var settings: ISettings = that.getSettings();
-
-            if($(this).is(":checked")) {
-                settings.preserveViewport = true;
-            } else {
-                settings.preserveViewport = false;
-            }
-
-            that.updateSettings(settings);
-        });
-
-        var settings: ISettings = this.getSettings();
-
-        if (settings.pagingEnabled){
-            this.$pagingEnabledCheckbox.attr("checked", "checked");
+        for (var i = 0; i < locales.length; i++){
+            var locale = locales[i];
+            this.$localeDropDown.append('<option value="' + locale.name + '">' + locale.label + '</option>');
         }
 
-        if (settings.preserveViewport){
-            this.$preserveViewportCheckbox.attr("checked", "checked");
-        }
+        this.$localeDropDown.val(this.provider.locale);
+
+        this.$localeDropDown.change(() => {
+            var p = new BootstrapParams();
+            p.locale = this.$localeDropDown.val();
+            this.provider.reload(p);
+        });
 
         this.$element.hide();
     }

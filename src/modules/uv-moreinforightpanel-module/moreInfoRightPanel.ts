@@ -6,6 +6,7 @@ export class MoreInfoRightPanel extends baseRight.RightPanel {
 
     moreInfoItemTemplate: JQuery;
     $items: JQuery;
+    $noData: JQuery;
 
     constructor($element: JQuery) {
         super($element);
@@ -25,8 +26,14 @@ export class MoreInfoRightPanel extends baseRight.RightPanel {
         this.$items = $('<div class="items"></div>');
         this.$main.append(this.$items);
 
+        this.$noData = $('<div class="noData">' + this.content.noData + '</div>');
+        this.$main.append(this.$noData);
+
         this.$expandButton.attr('tabindex', '4');
         this.$collapseButton.attr('tabindex', '4');
+
+        this.$title.text(this.content.moreInformation);
+        this.$closedTitle.text(this.content.moreInformation);
     }
 
     toggleFinish(): void {
@@ -51,9 +58,11 @@ export class MoreInfoRightPanel extends baseRight.RightPanel {
         this.$main.removeClass('loading');
 
         if (!data){
-            this.$main.append(this.content.noData);
+            this.$noData.show();
             return;
         }
+
+        this.$noData.hide();
 
         _.each(data, (item: any) => {
             this.$items.append(this.buildItem(item, 130));
@@ -65,24 +74,25 @@ export class MoreInfoRightPanel extends baseRight.RightPanel {
         var $header = $elem.find('.header');
         var $text = $elem.find('.text');
 
-        item = _.values(item);
+        var label = this.provider.getLocalisedValue(item.label);
+        var value  = this.provider.getLocalisedValue(item.value);
 
-        var name = this.provider.sanitize(item[0]);
-        var value = this.provider.sanitize(item[1]);
-
-        name = name.trim();
-        name = name.toLowerCase();
-
-        $elem.addClass(name.toCssClass());
+        label = this.provider.sanitize(label);
+        value = this.provider.sanitize(value);
 
         // replace \n with <br>
         value = value.replace('\n', '<br>');
 
-        $header.html(name);
+        $header.html(label);
         $text.html(value);
         $text.targetBlank();
 
         $text.toggleExpandText(trimChars);
+
+        label = label.trim();
+        label = label.toLowerCase();
+
+        $elem.addClass(label.toCssClass());
 
         return $elem;
     }

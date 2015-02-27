@@ -92,7 +92,7 @@ export class PagingHeaderPanel extends baseHeader.HeaderPanel {
         this.$total = $('<span class="total"></span>');
         this.$search.append(this.$total);
 
-        this.$searchButton = $('<a class="imageBtn go" tabindex="20"></a>');
+        this.$searchButton = $('<a class="go btn btn-primary" tabindex="20">' + this.content.go + '</a>');
         this.$search.append(this.$searchButton);
 
         this.$nextOptions = $('<div class="nextOptions"></div>');
@@ -193,9 +193,9 @@ export class PagingHeaderPanel extends baseHeader.HeaderPanel {
         var mode;
 
         if ((<ISeadragonExtension>this.extension).getMode() === extension.Extension.PAGE_MODE) {
-            mode = "page";
+            mode = this.content.page;
         } else {
-            mode = "image";
+            mode = this.content.image;
         }
 
         this.$firstButton.prop('title', this.content.first + " " + mode);
@@ -222,7 +222,7 @@ export class PagingHeaderPanel extends baseHeader.HeaderPanel {
 
         if ((<ISeadragonExtension>this.extension).getMode() === extension.Extension.PAGE_MODE) {
 
-            var orderLabel = this.provider.getCanvasLabel(canvas);
+            var orderLabel = this.provider.getLocalisedValue(canvas.label);
 
             if (orderLabel === "-") {
                 this.$searchText.val("");

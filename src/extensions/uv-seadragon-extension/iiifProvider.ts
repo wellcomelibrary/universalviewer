@@ -1,13 +1,14 @@
 /// <reference path="../../js/jquery.d.ts" />
 /// <reference path="../../js/extensions.d.ts" />
+import BootStrapper = require("../../bootstrapper");
 import baseProvider = require("../../modules/uv-shared-module/baseIIIFProvider");
 import utils = require("../../utils");
 import ISeadragonProvider = require("./iSeadragonProvider");
 
 export class Provider extends baseProvider.BaseProvider implements ISeadragonProvider{
 
-    constructor(config: any, manifest: any) {
-        super(config, manifest);
+    constructor(bootstrapper: BootStrapper, config: any, manifest: any) {
+        super(bootstrapper, config, manifest);
 
         this.config.options = $.extend(true, this.options, {
             // override or extend BaseProvider options.
@@ -17,7 +18,7 @@ export class Provider extends baseProvider.BaseProvider implements ISeadragonPro
     }
 
     getImageUri(canvas: any, imageBaseUri?: string, imageUriTemplate?: string): string{
-        var baseUri = imageBaseUri ? imageBaseUri : this.options.imageBaseUri || this.options.dataBaseUri || "";
+        var baseUri = imageBaseUri ? imageBaseUri : this.options.imageBaseUri || "";
         var template = imageUriTemplate? imageUriTemplate : this.options.imageUriTemplate;
 
         var iiifUri;
@@ -33,13 +34,13 @@ export class Provider extends baseProvider.BaseProvider implements ISeadragonPro
         if (!iiifUri){
             console.warn('no service endpoint available');
         }else if (iiifUri.endsWith('/')){
-            if (this.jsonp){
+            if (!this.corsEnabled()){
                 iiifUri += 'info.js';
             } else {
                 iiifUri += 'info.json';
             }
         } else {
-            if (this.jsonp) {
+            if (!this.corsEnabled()) {
                 iiifUri += '/info.js';
             } else {
                 iiifUri += '/info.json';
@@ -59,7 +60,7 @@ export class Provider extends baseProvider.BaseProvider implements ISeadragonPro
 
         var configUri = this.config.uri || '';
 
-        var script = String.prototype.format(template, this.dataUri, this.sequenceIndex, canvasIndex, zoom, rotation, configUri, width, height, esu);
+        var script = String.prototype.format(template, this.locale, configUri, this.manifestUri, this.sequenceIndex, canvasIndex, zoom, rotation, width, height, esu);
 
         return script;
     }

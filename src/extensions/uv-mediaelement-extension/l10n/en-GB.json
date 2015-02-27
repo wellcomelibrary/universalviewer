@@ -1,8 +1,6 @@
 {
-    "options":
-    {
-        "theme": "uv-default-theme",
-        "leftPanelEnabled": true
+    "localisation": {
+        "label": "English (GB)"
     },
     "modules":
     {
@@ -23,10 +21,6 @@
         },
         "embedDialogue":
         {
-            "options":
-            {
-                "embedTemplate": "<div class=\"uv\" data-uri=\"{0}\" data-sequenceindex=\"{1}\" data-config=\"{2}\" style=\"width:{3}px; height:{4}px; background-color: #000\"></div>\n<script type=\"text/javascript\" id=\"embedUV\" src=\"{5}\"></script><script type=\"text/javascript\">/* wordpress fix */</script>"
-            },
             "content":
             {
                 "title": "Embed",
@@ -42,13 +36,7 @@
             }
         },
         "treeViewLeftPanel": {
-            "options": {
-                "panelCollapsedWidth": 30,
-                "panelExpandedWidth": 255,
-                "panelOpen": false,
-                "panelAnimationDuration": 250,
-                "thumbsEnabled": false
-            }
+
         },
         "mediaelementCenterPanel":
         {
@@ -59,12 +47,6 @@
         },
         "moreInfoRightPanel":
         {
-            "options":
-            {
-                "panelCollapsedWidth": 30,
-                "panelExpandedWidth": 255,
-                "panelAnimationDuration": 250
-            },
             "content":
             {
                 "holdingText": "Your module goes here!"

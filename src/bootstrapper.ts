@@ -1,48 +1,72 @@
 /// <reference path="js/jquery.d.ts" />
+import BootstrapParams = require("bootstrapParams");
 import utils = require("utils");
+import util = utils.Utils;
 
 class BootStrapper{
 
+    params: BootstrapParams;
     manifest: any;
     extensions: any;
-    dataBaseUri: string;
-    manifestUri: string;
     sequenceIndex: number;
     sequences: any;
     sequence: any;
-    IIIF: boolean = true;
-    configExtensionUri: string;
     configExtension: any;
-    jsonp: boolean;
 
     // this loads the manifest, determines what kind of extension and provider to use, and instantiates them.
     constructor(extensions: any) {
-
         this.extensions = extensions;
+    }
 
+    getBootstrapParams(): BootstrapParams {
+        var p = new BootstrapParams();
+
+        p.manifestUri = util.getQuerystringParameter('manifestUri');
+        p.config = util.getQuerystringParameter('config');
+        p.jsonp = util.getBool(util.getQuerystringParameter('jsonp'), false);
+        p.isHomeDomain = util.getQuerystringParameter('isHomeDomain') === "true";
+        p.isReload = util.getQuerystringParameter('isReload') === "true";
+        p.locale = util.getQuerystringParameter('locale');
+        p.embedDomain = util.getQuerystringParameter('embedDomain');
+        p.isOnlyInstance = util.getQuerystringParameter('isOnlyInstance') === "true";
+        p.embedScriptUri = util.getQuerystringParameter('embedScriptUri');
+        p.domain = util.getQuerystringParameter('domain');
+        p.isLightbox = util.getQuerystringParameter('isLightbox') === "true";
+
+        return p;
+    }
+
+    bootStrap(params?: BootstrapParams): void {
         var that = this;
 
-        that.dataBaseUri = utils.Utils.getQuerystringParameter('dbu');
-        that.manifestUri = utils.Utils.getQuerystringParameter('du');
-        that.configExtensionUri = utils.Utils.getQuerystringParameter('c');
-        that.jsonp = utils.Utils.getBool(utils.Utils.getQuerystringParameter('jsonp'), false);
+        that.params = this.getBootstrapParams();
 
-        if (that.dataBaseUri){
-            that.manifestUri = that.dataBaseUri + that.manifestUri;
+        // merge new params
+        if (params){
+            that.params = $.extend(true, that.params, params);
         }
+
+        // empty app div
+        $('#app').empty();
+
+        // add loading class
+        $('#app').addClass('loading');
+
+        // remove any existing css
+        $('link[type*="text/css"]').remove();
 
         jQuery.support.cors = true;
 
         // if data-config has been set on embedding div, load the js
-        if (that.configExtensionUri){
+        if (that.params.config){
 
             // if "sessionstorage"
-            if (that.configExtensionUri.toLowerCase() === "sessionstorage"){
+            if (that.params.config.toLowerCase() === "sessionstorage"){
                 var config = sessionStorage.getItem("uv-config");
                 that.configExtension = JSON.parse(config);
                 that.loadManifest();
             } else {
-                $.getJSON(that.configExtensionUri, (configExtension) => {
+                $.getJSON(that.params.config, (configExtension) => {
                     that.configExtension = configExtension;
                     that.loadManifest();
                 });
@@ -53,20 +77,22 @@ class BootStrapper{
     }
 
     corsEnabled(): boolean {
-        return Modernizr.cors && !this.jsonp
+        return Modernizr.cors && !this.params.jsonp
     }
 
     loadManifest(): void{
         var that = this;
 
         if (this.corsEnabled()){
-            $.getJSON(that.manifestUri, (manifest) => {
+            //console.log('CORS Enabled');
+            $.getJSON(that.params.manifestUri, (manifest) => {
                 that.parseManifest(manifest);
             });
         } else {
+            //console.log('JSONP Enabled');
             // use jsonp
             var settings: JQueryAjaxSettings = <JQueryAjaxSettings>{
-                url: that.manifestUri,
+                url: that.params.manifestUri,
                 type: 'GET',
                 dataType: 'jsonp',
                 jsonp: 'callback',
@@ -84,31 +110,27 @@ class BootStrapper{
     parseManifest(manifest: any): void {
         this.manifest = manifest;
 
-        // if on home domain, check hash params. otherwise, use
-        // embed data attributes or default to 0.
-        var isHomeDomain = utils.Utils.getQuerystringParameter('hd') === "true";
-        var isReload = utils.Utils.getQuerystringParameter('rl') === "true";
-        var sequenceParam = 'si';
+        //var sequenceParam = 'si';
 
-        if (this.configExtension && this.configExtension.options && this.configExtension.options.IIIF) {
-            this.IIIF = this.configExtension.options.IIIF;
-        }
+        //if (this.configExtension && this.configExtension.options && this.configExtension.options.IIIF) {
+        //    this.IIIF = this.configExtension.options.IIIF;
+        //}
 
-        if (!this.IIIF) sequenceParam = 'asi';
+        //if (!this.IIIF) sequenceParam = 'asi';
 
-        if (isHomeDomain && !isReload) {
-            this.sequenceIndex = parseInt(utils.Utils.getHashParameter(sequenceParam, parent.document));
+        if (this.params.isHomeDomain && !this.params.isReload) {
+            this.sequenceIndex = parseInt(util.getHashParameter("si", parent.document));
         }
 
         if (!this.sequenceIndex) {
-            this.sequenceIndex = parseInt(utils.Utils.getQuerystringParameter(sequenceParam)) || 0;
+            this.sequenceIndex = parseInt(util.getQuerystringParameter("si")) || 0;
         }
 
-        if (!this.IIIF) {
-            this.sequences = this.manifest.assetSequences;
-        } else {
+        //if (!this.IIIF) {
+        //    this.sequences = this.manifest.assetSequences;
+        //} else {
             this.sequences = this.manifest.sequences;
-        }
+        //}
 
         if (!this.sequences) {
             this.notFound();
@@ -121,22 +143,22 @@ class BootStrapper{
 
         var that = this;
 
-        if (!that.IIIF){
-            // if it's not a reference, load dependencies
-            if (!that.sequences[that.sequenceIndex].$ref) {
-                that.sequence = that.sequences[that.sequenceIndex];
-                that.loadDependencies();
-            } else {
-                // load referenced sequence.
-                var baseManifestUri = that.manifestUri.substr(0, that.manifestUri.lastIndexOf('/') + 1);
-                var sequenceUri = baseManifestUri + that.sequences[that.sequenceIndex].$ref;
-
-                $.getJSON(sequenceUri, (sequenceData) => {
-                    that.sequence = that.sequences[that.sequenceIndex] = sequenceData;
-                    that.loadDependencies();
-                });
-            }
-        } else {
+        //if (!that.IIIF){
+        //    // if it's not a reference, load dependencies
+        //    if (!that.sequences[that.sequenceIndex].$ref) {
+        //        that.sequence = that.sequences[that.sequenceIndex];
+        //        that.loadDependencies();
+        //    } else {
+        //        // load referenced sequence.
+        //        var baseManifestUri = that.params.manifestUri.substr(0, that.params.manifestUri.lastIndexOf('/') + 1);
+        //        var sequenceUri = baseManifestUri + that.sequences[that.sequenceIndex].$ref;
+        //
+        //        $.getJSON(sequenceUri, (sequenceData) => {
+        //            that.sequence = that.sequences[that.sequenceIndex] = sequenceData;
+        //            that.loadDependencies();
+        //        });
+        //    }
+        //} else {
             // if it's not a reference, load dependencies
             if (that.sequences[that.sequenceIndex].canvases) {
                 that.sequence = that.sequences[that.sequenceIndex];
@@ -150,7 +172,7 @@ class BootStrapper{
                     that.loadDependencies();
                 });
             }
-        }
+        //}
     }
 
     notFound(): void{
@@ -165,15 +187,15 @@ class BootStrapper{
         var that = this;
         var extension;
 
-        if (!that.IIIF){
-            extension = that.extensions[that.sequence.assetType];
-        } else {
+        //if (!that.IIIF){
+        //    extension = that.extensions[that.sequence.assetType];
+        //} else {
             // only seadragon extension is compatible with IIIF
             extension = that.extensions['seadragon/iiif'];
-        }
+        //}
 
         // todo: use a compiler flag when available
-        var configPath = (window.DEBUG)? 'extensions/' + extension.name + '/config.js' : 'js/' + extension.name + '-config.js';
+        var configPath = (window.DEBUG)? 'extensions/' + extension.name + '/config/' + that.params.locale + '.config.js' : 'js/' + extension.name + '.' + that.params.locale + '.config.js';
 
         // feature detection
         yepnope({
@@ -185,13 +207,13 @@ class BootStrapper{
                     // if data-config has been set on embedding div, extend the existing config object.
                     if (that.configExtension){
                         // save a reference to the config extension uri.
-                        config.uri = that.configExtensionUri;
+                        config.uri = that.params.config;
 
                         $.extend(true, config, that.configExtension);
                     }
 
                     // todo: use a compiler flag when available
-                    var cssPath = (window.DEBUG)? 'extensions/' + extension.name + '/css/styles.css' : 'themes/' + config.options.theme + '/css/' + extension.name + '.css';
+                    var cssPath = (window.DEBUG)? 'extensions/' + extension.name + '/theme/' + config.options.theme + '.css' : 'themes/' + config.options.theme + '/css/' + extension.name + '/theme.css';
 
                     yepnope.injectCss(cssPath, function () {
                         that.createExtension(extension, config);
@@ -203,7 +225,7 @@ class BootStrapper{
 
     createExtension(extension: any, config: any): void{
         // create provider.
-        var provider = new extension.provider(config, this.manifest);
+        var provider = new extension.provider(this, config, this.manifest);
 
         // create extension.
         new extension.type(provider);

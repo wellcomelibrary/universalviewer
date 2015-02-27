@@ -1,7 +1,9 @@
 /// <reference path="./iSettings.d.ts" />
 
+import BootStrapper = require("../../bootstrapper");
 import TreeNode = require("./treeNode");
 import Thumb = require("./thumb");
+import BootstrapParams = require("../../bootstrapParams");
 
 // the provider contains all methods related to
 // interacting with the IIIF data model.
@@ -19,9 +21,9 @@ interface IProvider{
     getCanvasByIndex(index): any;
     getCanvasIndexByLabel(label: string): number;
     getCanvasIndexById(id: string): number;
-    getCanvasLabel(canvas: any): string;
     getCanvasStructure(canvas: any): any;
     getCurrentCanvas(): any;
+    getLocalisedValue(property: any): string;
     getManifestSeeAlsoUri(manifest: any): string;
     getManifestType(): string;
     getMetaData(callback: (data: any) => any): void;
@@ -52,6 +54,7 @@ interface IProvider{
     sanitize(html: string): string;
 
     // should these move to extension? (not generic to IIIF)
+    bootstrapper: BootStrapper;
     config: any;
     domain: string;
     embedDomain: string;
@@ -60,6 +63,7 @@ interface IProvider{
     isOnlyInstance: boolean;
     isReload: boolean;
     jsonp: boolean;
+    locale: string;
 
     getMediaUri(mediaUri: string): string;
     getDomain(): string;
@@ -67,10 +71,12 @@ interface IProvider{
     defaultToThumbsView(): boolean;
     isDeepLinkingEnabled(): boolean;
     paramMap: string[];
-    reload(callback: any): void;
+    reloadManifest(callback: any): void;
+    reload(params?: BootstrapParams);
     setMediaUri(canvas: any): void;
     getSettings(): ISettings;
     updateSettings(settings: ISettings): void;
+    getLocales(): any;
 }
 
 export = IProvider;

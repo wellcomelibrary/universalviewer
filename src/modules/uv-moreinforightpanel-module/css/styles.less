@@ -6,15 +6,7 @@
 
         .top{
             .title{
-                background: url('@{img-path}moreinfo.png') no-repeat;
-                width: 140px;
-            }
-        }
 
-        .closed{
-            .title{
-                background: url('@{img-path}moreinfo_v.png') no-repeat;
-                height: 140px;
             }
         }
 
@@ -28,6 +20,10 @@
 
             &.loading{
                 .loading(@loader-black-bg);
+            }
+
+            .noData{
+                padding: 0 @padding-medium-horizontal (@padding-medium-vertical * 2) @padding-medium-horizontal;
             }
 
             .items{

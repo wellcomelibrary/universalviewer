@@ -2,30 +2,33 @@
 
 Navigate sequences of images in a zoomable, extensible interface.
 
-[example](http://wellcomelibrary.org/player/b18035723)
+[example](http://universalviewer.azurewebsites.net/)
 
-[Google group](https://groups.google.com/forum/#!forum/wellcome-player)
+[Google group](https://groups.google.com/forum/#!forum/universalviewer)
 
 ## Stable Builds
 
-See the [GitHub releases page](https://github.com/britishlibrary/UniversalViewer/releases).
+See the [GitHub releases page](https://github.com/UniversalViewer/UniversalViewer/releases).
 
 ## Development
 
-Please see the [wiki](https://github.com/britishlibrary/UniversalViewer/wiki) for instructions on how to customise the viewer for your own projects.
+Please see the [wiki](https://github.com/UniversalViewer/UniversalViewer/wiki) for instructions on how to customise the viewer for your own projects.
 
 ### First Time Setup
 
 All command-line operations for building the Universal Viewer are scripted using [Grunt](http://gruntjs.com/) which is based on [Node.js](http://nodejs.org/). We are using Node for this project because it provides a powerful cross-platform collection of tools with minimal setup overhead. To get set up:
 
 1. Install [Node.js](http://nodejs.org), if you haven't already
-1. Install the Grunt command line interface (if you haven't already); on the command line, run `npm install -g grunt-cli`
-1. Clone the 'UniversalViewer' repository:
-`git clone https://github.com/britishlibrary/UniversalViewer`
-1. On the command line, go in to the 'UniversalViewer' folder
-1. Run `git submodule init`
-1. Run `git submodule update`
-1. Run `npm install`
+1. Install the Grunt command line interface (if you haven't already); on the command line, run:
+
+	`npm install -g grunt-cli`
+1. Clone the 'universalviewer' repository and submodules:
+
+	`git clone git@github.com:UniversalViewer/universalviewer.git --recursive`
+1. On the command line, go in to the 'universalviewer' folder
+1. Run
+
+	`npm install`
 
 ### Debug Builds
 
@@ -58,3 +61,17 @@ To view the examples run:
 ## License
 
 The Universal Viewer is released under the MIT license. For details, see the file LICENSE.txt.
+
+## Notes
+
+### Submodules
+
+When switching between branches, the super project may have a different commit hash stored for any or all of the submodules (examples, tests, src/themes/uv-default-theme).
+
+This will show as "new commits" when doing a `git status`.
+
+To reset the submodules to their correct commit hash for the current branch use:
+
+	git submodule update --init
+
+Be aware that this will leave your submodules in a "detached HEAD state" as after the initial clone. Git only deals in commit hashes for submodules, you need to check out the appropriate branch yourself.

@@ -1,13 +1,14 @@
 /// <reference path="../../js/jquery.d.ts" />
 /// <reference path="../../js/extensions.d.ts" />
+import BootStrapper = require("../../bootstrapper");
 import baseProvider = require("../../modules/uv-shared-module/baseProvider");
 import utils = require("../../utils");
 import ISeadragonProvider = require("./iSeadragonProvider");
 
 export class Provider extends baseProvider.BaseProvider implements ISeadragonProvider{
 
-    constructor(config: any, manifest: any) {
-        super(config, manifest);
+    constructor(bootstrapper: BootStrapper, config: any, manifest: any) {
+        super(bootstrapper, config, manifest);
 
         this.config.options = $.extend(true, this.options, {
             // override or extend BaseProvider options.
@@ -17,7 +18,7 @@ export class Provider extends baseProvider.BaseProvider implements ISeadragonPro
     }
 
     getImageUri(asset: any, dziBaseUri?: string, dziUriTemplate?: string): string{
-        var baseUri = dziBaseUri ? dziBaseUri : this.options.dziBaseUri || this.options.dataBaseUri || "";
+        var baseUri = dziBaseUri ? dziBaseUri : this.options.dziBaseUri || "";
         var template = dziUriTemplate? dziUriTemplate : this.options.dziUriTemplate;
         var uri = String.prototype.format(template, baseUri, asset.dziUri);
 
@@ -32,7 +33,7 @@ export class Provider extends baseProvider.BaseProvider implements ISeadragonPro
 
         var configUri = this.config.uri || '';
 
-        var script = String.prototype.format(template, this.dataUri, this.sequenceIndex, assetIndex, zoom, rotation, configUri, width, height, esu);
+        var script = String.prototype.format(template, this.locale, configUri, this.manifestUri, this.sequenceIndex, assetIndex, zoom, rotation, width, height, esu);
 
         return script;
     }

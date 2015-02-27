@@ -20,7 +20,7 @@ import right = require("../../modules/uv-moreinforightpanel-module/moreInfoRight
 import footer = require("../../modules/uv-shared-module/footerPanel");
 import help = require("../../modules/uv-dialogues-module/helpDialogue");
 import embed = require("../../extensions/uv-seadragon-extension/embedDialogue");
-import settingsDialogue = require("../../modules/uv-dialogues-module/settingsDialogue");
+import settingsDialogue = require("../../extensions/uv-seadragon-extension/settingsDialogue");
 import IProvider = require("../../modules/uv-shared-module/iProvider");
 import settings = require("../../modules/uv-shared-module/settings");
 import ISeadragonProvider = require("./iSeadragonProvider");
@@ -104,8 +104,8 @@ export class Extension extends baseExtension.BaseExtension {
         });
 
         $.subscribe(settingsDialogue.SettingsDialogue.UPDATE_SETTINGS, (e) => {
-            this.provider.reload(() => {
-                $.publish(baseExtension.BaseExtension.RELOAD);
+            this.provider.reloadManifest(() => {
+                $.publish(baseExtension.BaseExtension.RELOAD_MANIFEST);
                 this.viewPage(this.provider.canvasIndex, true);
             });
         });
@@ -150,7 +150,9 @@ export class Extension extends baseExtension.BaseExtension {
         });
 
         $.subscribe(baseCenter.SeadragonCenterPanel.SEADRAGON_ANIMATION_FINISH, (e, viewer) => {
-            this.setParam(baseProvider.params.zoom, this.centerPanel.serialiseBounds(this.centerPanel.currentBounds));
+            if (this.centerPanel){
+                this.setParam(baseProvider.params.zoom, this.centerPanel.serialiseBounds(this.centerPanel.currentBounds));
+            }
         });
 
         $.subscribe(baseCenter.SeadragonCenterPanel.SEADRAGON_ROTATION, (e, rotation) => {

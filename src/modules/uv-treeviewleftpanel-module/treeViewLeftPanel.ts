@@ -42,7 +42,7 @@ export class TreeViewLeftPanel extends baseLeft.LeftPanel {
 
         super.create();
 
-        $.subscribe(extension.Extension.RELOAD, () => {
+        $.subscribe(extension.Extension.RELOAD_MANIFEST, () => {
             this.dataBindThumbsView();
             this.dataBindGalleryView();
         });
@@ -60,10 +60,10 @@ export class TreeViewLeftPanel extends baseLeft.LeftPanel {
         this.$tabs = $('<div class="tabs"></div>');
         this.$main.append(this.$tabs);
 
-        this.$treeButton = $('<a class="tab first">' + this.content.index + '</a>');
+        this.$treeButton = $('<a class="index tab first">' + this.content.index + '</a>');
         this.$tabs.append(this.$treeButton);
 
-        this.$thumbsButton = $('<a class="tab">' + this.content.thumbnails + '</a>');
+        this.$thumbsButton = $('<a class="thumbs tab">' + this.content.thumbnails + '</a>');
         this.$tabs.append(this.$thumbsButton);
 
         this.$tabsContent = $('<div class="tabsContent"></div>');
@@ -99,6 +99,9 @@ export class TreeViewLeftPanel extends baseLeft.LeftPanel {
         this.$expandButton.attr('tabindex', '7');
         this.$collapseButton.attr('tabindex', '7');
         this.$expandFullButton.attr('tabindex', '8');
+
+        this.$title.text(this.content.contents);
+        this.$closedTitle.text(this.content.contents);
     }
 
     createTreeView(): void {
