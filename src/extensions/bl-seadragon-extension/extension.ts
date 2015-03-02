@@ -25,7 +25,7 @@ export class Extension extends coreExtension.Extension implements IBLSeadragonEx
 
         $.subscribe(footer.FooterPanel.DOWNLOAD, (e) => {
             $.publish(externalContentDialogue.ExternalContentDialogue.SHOW_EXTERNALCONTENT_DIALOGUE, [{
-                uri: "http://www.bl.uk/"
+                uri: this.provider.config.modules.externalContentDialogue.options.downloadUri
             }]);
         });
     }

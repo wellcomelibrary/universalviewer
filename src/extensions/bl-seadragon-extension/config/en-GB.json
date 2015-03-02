@@ -1,3 +1,10 @@
 {
-    "extends": "./src/extensions/uv-seadragon-extension/config/en-GB.json"
+    "extends": "./src/extensions/uv-seadragon-extension/config/en-GB.json",
+    "modules": {
+        "externalContentDialogue": {
+            "options": {
+                "downloadUri": "http://bl.uk"
+            }
+        }
+    }
 }
