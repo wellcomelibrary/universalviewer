@@ -47,8 +47,8 @@ require([
         'bootstrapper',
         'l10n',
         'sanitize',
-        'extensions/uv-seadragon-extension/extension',
-        'extensions/uv-seadragon-extension/iiifProvider',
+        'extensions/bl-seadragon-extension/extension',
+        'extensions/bl-seadragon-extension/provider',
         'extensions/uv-seadragon-extension/provider',
         'extensions/uv-mediaelement-extension/extension',
         'extensions/uv-mediaelement-extension/provider',
@@ -87,7 +87,7 @@ require([
         extensions['seadragon/iiif'] = {
             type: seadragonExtension.Extension,
             provider: seadragonIIIFProvider.Provider,
-            name: 'uv-seadragon-extension'
+            name: 'bl-seadragon-extension'
         };
 
         extensions['video/mp4'] = {
