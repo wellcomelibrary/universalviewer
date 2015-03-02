@@ -11,6 +11,7 @@ import footer = require("../../modules/bl-footerpanel-module/footerPanel");
 import help = require("../../modules/uv-dialogues-module/helpDialogue");
 import embed = require("../../extensions/uv-seadragon-extension/embedDialogue");
 import settingsDialogue = require("../../extensions/uv-seadragon-extension/settingsDialogue");
+import externalContentDialogue = require("../../modules/uv-dialogues-module/externalContentDialogue");
 import utils = require("../../utils");
 
 export class Extension extends coreExtension.Extension implements IBLSeadragonExtension{
@@ -23,8 +24,9 @@ export class Extension extends coreExtension.Extension implements IBLSeadragonEx
         super.create();
 
         $.subscribe(footer.FooterPanel.DOWNLOAD, (e) => {
-            console.log("download");
-            //$.publish(arbitraryContentDialogue.ArbitraryContentDialogue.SHOW_ARBITRARYCONTENT_DIALOGUE);
+            $.publish(externalContentDialogue.ExternalContentDialogue.SHOW_EXTERNALCONTENT_DIALOGUE, [{
+                uri: "http://www.bl.uk/"
+            }]);
         });
     }
 
@@ -54,6 +56,10 @@ export class Extension extends coreExtension.Extension implements IBLSeadragonEx
         this.$settingsDialogue = $('<div class="overlay settings"></div>');
         shell.Shell.$overlays.append(this.$settingsDialogue);
         this.settingsDialogue = new settingsDialogue.SettingsDialogue(this.$settingsDialogue);
+
+        this.$externalContentDialogue = $('<div class="overlay externalContent"></div>');
+        shell.Shell.$overlays.append(this.$externalContentDialogue);
+        this.externalContentDialogue = new externalContentDialogue.ExternalContentDialogue(this.$externalContentDialogue);
 
         if (this.isLeftPanelEnabled()){
             this.leftPanel.init();
