@@ -1,0 +1,28 @@
+#app {
+
+    @img-path: '../../../modules/bl-footerpanel-module/img/';
+
+    .footerPanel{
+
+        .options {
+
+            a{
+                &.download{
+                    .icon-left(url('@{img-path}download.png'), 20px, 30px);
+                    line-height: 22px;
+                }
+            }
+
+            &.minimiseButtons{
+
+                a{
+                    &.download{
+                        .hide-text();
+                        width: 21px;
+                    }
+                }
+            }
+
+        }
+    }
+}

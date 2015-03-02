@@ -1,0 +1,10 @@
+{
+    "extends": "./src/extensions/uv-seadragon-extension/l10n/en-GB.json",
+    "modules": {
+        "footerPanel": {
+            "content": {
+                "download": "Download"
+            }
+        }
+    }
+}

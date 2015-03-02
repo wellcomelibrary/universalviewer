@@ -1,0 +1,3 @@
+{
+    "extends": "./src/extensions/uv-seadragon-extension/config/cy-GB.json"
+}

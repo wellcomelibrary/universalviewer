@@ -90,8 +90,10 @@ src/extensions/*/theme/*.css
 
 src/extensions/*
 !src/extensions/uv*
+!src/extensions/bl*
 src/modules/*
 !src/modules/uv*
+!src/modules/bl*
 
 src/extensions/*/config/*.config.js
 
