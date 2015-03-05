@@ -3,7 +3,7 @@
     "modules": {
         "externalContentDialogue": {
             "options": {
-                "downloadUri": "http://bl.uk"
+                "downloadUri": "/download.html"
             }
         }
     }

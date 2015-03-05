@@ -1,6 +1,7 @@
 
 import coreExtension = require("../uv-seadragon-extension/extension");
 import IBLSeadragonExtension = require("./iBLSeadragonExtension");
+import IBLSeadragonProvider = require("./iBLSeadragonProvider");
 import IProvider = require("../../modules/uv-shared-module/iProvider");
 import shell = require("../../modules/uv-shared-module/shell");
 import header = require("../../modules/uv-pagingheaderpanel-module/pagingHeaderPanel");
@@ -24,8 +25,13 @@ export class Extension extends coreExtension.Extension implements IBLSeadragonEx
         super.create();
 
         $.subscribe(footer.FooterPanel.DOWNLOAD, (e) => {
+            var downloadUri = this.provider.config.modules.externalContentDialogue.options.downloadUri;
+            var infoUri = (<IBLSeadragonProvider>this.provider).getImageUri(this.provider.getCanvasByIndex(this.provider.canvasIndex));
+
+            var uri = downloadUri + "?info=" + infoUri;
+
             $.publish(externalContentDialogue.ExternalContentDialogue.SHOW_EXTERNALCONTENT_DIALOGUE, [{
-                uri: this.provider.config.modules.externalContentDialogue.options.downloadUri
+                uri: uri
             }]);
         });
     }
