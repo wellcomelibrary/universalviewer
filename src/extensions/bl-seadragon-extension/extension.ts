@@ -26,7 +26,9 @@ export class Extension extends coreExtension.Extension implements IBLSeadragonEx
 
         $.subscribe(footer.FooterPanel.DOWNLOAD, (e) => {
             var downloadUri = this.provider.config.modules.externalContentDialogue.options.downloadUri;
-            var infoUri = (<IBLSeadragonProvider>this.provider).getImageUri(this.provider.getCanvasByIndex(this.provider.canvasIndex));
+            var c = this.provider.getCanvasByIndex(this.provider.canvasIndex);
+            c = c['@id'];
+            var infoUri = c.substr(c.indexOf('ark:/'));
 
             var uri = downloadUri + "?info=" + infoUri;
 
