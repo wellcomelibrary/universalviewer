@@ -90,6 +90,7 @@ interface Window{
     webViewerLoad: any; // pdfjs
     IEXMLHttpRequest: any;
     openSeadragonViewer: any;
+    JSON: any;
 }
 
 // google
