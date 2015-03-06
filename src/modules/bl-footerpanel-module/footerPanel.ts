@@ -29,6 +29,10 @@ export class FooterPanel extends baseFooter.FooterPanel {
 
             $.publish(FooterPanel.DOWNLOAD);
         });
+
+        if (!utils.Utils.getBool(this.options.downloadEnabled, true)){
+            this.$downloadButton.hide();
+        }
     }
 
     resize(): void {

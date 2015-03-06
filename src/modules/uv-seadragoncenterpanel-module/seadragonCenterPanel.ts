@@ -328,7 +328,7 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
 
         var that = this.userData;
 
-        that.viewer.removeHandler('open', that.handler);
+        that.viewer.removeHandler('open', that.openTileSourcesHandler);
 
         var viewingDirection = that.provider.getViewingDirection();
 

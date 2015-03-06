@@ -5,6 +5,13 @@
             "options": {
                 "downloadUri": "/download.html"
             }
+        },
+        "footerPanel":
+        {
+            "options":{
+                "embedEnabled": false,
+                "downloadEnabled": false
+            }
         }
     }
 }
