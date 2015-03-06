@@ -156,7 +156,7 @@ export class BaseExtension implements IExtension {
 
     triggerSocket(eventName: string, eventObject?: any): void {
         if (this.socket) {
-            this.socket.postMessage(JSON.stringify({ eventName: eventName, eventObject: eventObject }));
+            this.socket.postMessage(window.JSON.stringify({ eventName: eventName, eventObject: eventObject }));
         }
     }
 
