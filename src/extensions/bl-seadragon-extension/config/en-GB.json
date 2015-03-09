@@ -10,7 +10,8 @@
         {
             "options":{
                 "embedEnabled": false,
-                "downloadEnabled": false
+                "downloadEnabled": false,
+                "fullscreenEnabled": true
             }
         }
     }
