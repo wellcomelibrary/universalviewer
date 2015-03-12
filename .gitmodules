@@ -7,3 +7,6 @@
 [submodule "tests"]
 	path = tests
 	url = git@github.com:UniversalViewer/tests.git
+[submodule "src/themes/nlw-theme"]
+	path = src/themes/nlw-theme
+	url = git@github.com:edsilv/nlw-theme.git
