@@ -12,6 +12,9 @@
       "PartOfWork": "Rhan o waith"
     }
   },
+  "content": {
+    "canvasIndexOutOfRange": "Mynegai gynfas allan o amrediad."
+  },
   "modules": {
     "dialogue": {
       "content": {
