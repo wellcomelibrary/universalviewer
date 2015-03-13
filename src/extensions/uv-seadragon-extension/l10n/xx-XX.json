@@ -11,6 +11,9 @@
             "PartOfWork": "Part of Work (xx-XX)"
         }
     },
+    "content": {
+        "canvasIndexOutOfRange": "Canvas index out of range. (xx-XX)"
+    },
     "modules": {
         "dialogue": {
             "content": {
@@ -71,7 +74,11 @@
             "content": {
                 "index": "Index (xx-XX)",
                 "thumbnails": "Thumbnails (xx-XX)",
-                "contents": "CONTENTS (xx-XX)"
+                "title": "Contents (xx-XX)",
+                "expand": "Expand Contents (xx-XX)",
+                "expandFull": "Expand Gallery (xx-XX)",
+                "collapse": "Collapse Contents (xx-XX)",
+                "collapseFull": "Collapse Gallery (xx-XX)"
             }
         },
         "seadragonCenterPanel": {
@@ -88,7 +95,11 @@
             "content": {
                 "holdingText": "Your module goes here! (xx-XX)",
                 "noData": "No data to display (xx-XX)",
-                "moreInformation": "MORE INFORMATION (xx-XX)"
+                "title": "More Information (xx-XX)",
+                "expand": "Expand More Information (xx-XX)",
+                "expandFull": "Expand Gallery (xx-XX)",
+                "collapse": "Collapse More Information (xx-XX)",
+                "collapseFull": "Collapse Gallery (xx-XX)"
             }
         },
         "footerPanel": {
