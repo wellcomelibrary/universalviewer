@@ -1,7 +1,6 @@
-
 {
   "localisation": {
-    "label": "Cymraeg"
+    "label": "English"
   },
   "options": {
     "sectionMappings": {
@@ -13,7 +12,7 @@
     }
   },
   "content": {
-    "canvasIndexOutOfRange": "Mynegai gynfas allan o amrediad."
+    "canvasIndexOutOfRange": "Mynegai gynfas tu hwnt i'r amrediad"
   },
   "modules": {
     "dialogue": {
@@ -47,7 +46,7 @@
     "embedDialogue": {
       "content": {
         "title": "Ymgorffori",
-        "instructions": "Er mwyn ymgorffori'r eitem hon ar eich gwefan, copïwch a gosodwch y cod isod: ",
+        "instructions": "Er mwyn ymgorffori'r eitem hon ar eich gwefan, copïwch a gosodwch y cod isod:",
         "width": "Lled",
         "height": "Hyd",
         "customSize": "Maint ddewisol"
@@ -76,10 +75,10 @@
         "index": "Mynegai",
         "thumbnails": "Bodluniau",
         "title": "Cynnwys",
-        "expand": "Expand Cynnwys",
-        "expandFull": "Expand Gallery",
-        "collapse": "Collapse Cynnwys",
-        "collapseFull": "Collapse Gallery"
+        "expand": "Ehangu'r Cynnwys",
+        "expandFull": "Ehangu'r Galeri",
+        "collapse": "Lleihau'r Cynnwys",
+        "collapseFull": "Lleihau'r Galeri"
       }
     },
     "seadragonCenterPanel": {
@@ -96,11 +95,11 @@
       "content": {
         "holdingText": "Eich modiwl fan hyn!",
         "noData": "Nid oes data i'w arddangos",
-        "title": "Rhagor o wybodaeth",
-        "expand": "Expand Mwy o wybodaeth",
-        "expandFull": "",
-        "collapse": "Collapse Mwy o wybodaeth",
-        "collapseFull": ""
+        "title": "Mwy o Wybodaeth",
+        "expand": "Ehangu Fwy o Wybodaeth",
+        "expandFull": "Ehangu'r Galeri",
+        "collapse": "Lleihau Mwy o Wybodaeth",
+        "collapseFull": "Lleihau'r Galeri"
       }
     },
     "footerPanel": {
