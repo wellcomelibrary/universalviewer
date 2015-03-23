@@ -7,7 +7,7 @@
       "CoverFrontOutside": "Clawr blaen",
       "CoverBackOutside": "Clawr cefn",
       "TitlePage": "Tudalen deitl",
-      "TableOfContents": "Tabl cynnwys",
+      "TableOfContents": "Tabl Cynnwys",
       "PartOfWork": "Rhan o waith"
     }
   },
@@ -24,7 +24,7 @@
       "content": {
         "emptyValue": "rhowch rif",
         "pageNotFound": "Nid yw'r eitem yn cynnwys tudalen gyda'r rhif a nodwyd. Ceisiwch cyfnewid y math i 'delwedd'.",
-        "ok": "Ewch",
+        "ok": "GWELD",
         "refresh": "Ailosod",
         "invalidNumber": "Mewnosodwch rif dilys"
       }
@@ -41,6 +41,18 @@
         "pagingEnabled": "Arddangos dwy dudalen",
         "preserveViewport": "Cadw'r lefel o glosio",
         "locale": "Iaith"
+      }
+    },
+    "downloadDialogue": {
+      "content": {
+        "title": "Lawrlwytho",
+        "currentViewAsJpg": "Golwg presennol (jpg)",
+        "wholeImageHighResAsJpg": "Y ddelwedd gyfan o ansawdd uchel (jpg)",
+        "wholeImageLowResAsJpg": "Y ddelwedd gyfan o ansawdd isel (jpg)",
+        "entireDocumentAsPdf": "Y ddogfen gyflawn (pdf)",
+        "entireFileAsOriginal": "Y ffeil gyfan ({0})",
+        "preview": "Rhagolwg",
+        "download": "Lawrlwytho"
       }
     },
     "embedDialogue": {
@@ -61,12 +73,12 @@
         "previous": "Cynt",
         "next": "Nesaf",
         "last": "Olaf",
-        "go": "Ewch",
+        "go": "GWELD",
         "of": "o {0}",
         "emptyValue": "Mewnosodwch werth",
         "close": "Cau",
         "settings": "Dewisiadau",
-        "oneUp": "Gweld un tudalen ar y tro",
+        "oneUp": "Gweld un dudalen ar y tro",
         "twoUp": "Gweld dwy dudalen ar y tro"
       }
     },
@@ -77,8 +89,8 @@
         "title": "Cynnwys",
         "expand": "Ehangu'r Cynnwys",
         "expandFull": "Ehangu'r Galeri",
-        "collapse": "Lleihau'r Cynnwys",
-        "collapseFull": "Lleihau'r Galeri"
+        "collapse": "Cuddio'r Cynnwys",
+        "collapseFull": "Cuddio'r Galeri"
       }
     },
     "seadragonCenterPanel": {
@@ -98,15 +110,16 @@
         "title": "Mwy o Wybodaeth",
         "expand": "Ehangu Fwy o Wybodaeth",
         "expandFull": "Ehangu'r Galeri",
-        "collapse": "Lleihau Mwy o Wybodaeth",
-        "collapseFull": "Lleihau'r Galeri"
+        "collapse": "Cuddio Mwy o Wybodaeth",
+        "collapseFull": "Cuddio'r Galeri"
       }
     },
     "footerPanel": {
       "content": {
         "fullScreen": "Sgrin lawn",
         "exitFullScreen": "Dianc o'r sgrin lawn",
-        "embed": "Ymgorffori"
+        "embed": "Ymgorffori",
+        "download": "Lawrlwytho"
       }
     }
   }

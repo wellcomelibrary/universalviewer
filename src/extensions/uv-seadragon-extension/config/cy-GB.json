@@ -84,7 +84,7 @@
     {
       "options":{
         "embedEnabled": true,
-        "downloadEnabled": false,
+        "downloadEnabled": true,
         "minimiseButtons": false
       }
     }
