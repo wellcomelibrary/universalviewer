@@ -70,10 +70,12 @@ export class SettingsDialogue extends dialogue.Dialogue {
         this.$localeDropDown.val(this.provider.locale);
 
         this.$localeDropDown.change(() => {
-            var p = new BootstrapParams();
-            p.locale = this.$localeDropDown.val();
-            this.provider.reload(p);
+            this.provider.changeLocale(this.$localeDropDown.val());
         });
+
+        if (this.provider.getLocales().length < 2){
+            this.$locale.hide();
+        }
 
         this.$element.hide();
     }
@@ -86,6 +88,10 @@ export class SettingsDialogue extends dialogue.Dialogue {
         this.provider.updateSettings(settings);
 
         $.publish(SettingsDialogue.UPDATE_SETTINGS, [settings]);
+    }
+
+    open(): void {
+        super.open();
     }
 
     resize(): void {

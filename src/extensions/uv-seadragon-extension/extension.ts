@@ -5,7 +5,6 @@
 import baseExtension = require("../../modules/uv-shared-module/baseExtension");
 import utils = require("../../utils");
 import baseProvider = require("../../modules/uv-shared-module/baseProvider");
-import provider = require("./provider");
 import shell = require("../../modules/uv-shared-module/shell");
 import header = require("../../modules/uv-pagingheaderpanel-module/pagingHeaderPanel");
 import baseLeft = require("../../modules/uv-shared-module/leftPanel");
@@ -19,7 +18,8 @@ import baseRight = require("../../modules/uv-shared-module/rightPanel");
 import right = require("../../modules/uv-moreinforightpanel-module/moreInfoRightPanel");
 import footer = require("../../modules/uv-shared-module/footerPanel");
 import help = require("../../modules/uv-dialogues-module/helpDialogue");
-import embed = require("../../extensions/uv-seadragon-extension/embedDialogue");
+import embed = require("./embedDialogue");
+import download = require("./downloadDialogue");
 import settingsDialogue = require("../../extensions/uv-seadragon-extension/settingsDialogue");
 import IProvider = require("../../modules/uv-shared-module/iProvider");
 import settings = require("../../modules/uv-shared-module/settings");
@@ -38,6 +38,8 @@ export class Extension extends baseExtension.BaseExtension {
     helpDialogue: help.HelpDialogue;
     $embedDialogue: JQuery;
     embedDialogue: embed.EmbedDialogue;
+    $downloadDialogue: JQuery;
+    downloadDialogue: download.DownloadDialogue;
     $settingsDialogue: JQuery;
     settingsDialogue: settingsDialogue.SettingsDialogue;
     $externalContentDialogue: JQuery;
@@ -46,6 +48,7 @@ export class Extension extends baseExtension.BaseExtension {
     currentRotation: number = 0;
 
     static mode: string;
+    static CURRENT_VIEW_URI: string = 'onCurrentViewUri';
 
     // modes
     static PAGE_MODE: string = "pageMode";
@@ -106,11 +109,12 @@ export class Extension extends baseExtension.BaseExtension {
             this.viewPage(index);
         });
 
+        $.subscribe(header.PagingHeaderPanel.UPDATE_SETTINGS, (e) => {
+            this.updateSettings();
+        });
+
         $.subscribe(settingsDialogue.SettingsDialogue.UPDATE_SETTINGS, (e) => {
-            this.provider.reloadManifest(() => {
-                $.publish(baseExtension.BaseExtension.RELOAD_MANIFEST);
-                this.viewPage(this.provider.canvasIndex, true);
-            });
+            this.updateSettings();
         });
 
         $.subscribe(treeView.TreeView.NODE_SELECTED, (e, data: any) => {
@@ -156,6 +160,14 @@ export class Extension extends baseExtension.BaseExtension {
             if (this.centerPanel){
                 this.setParam(baseProvider.params.zoom, this.centerPanel.serialiseBounds(this.centerPanel.currentBounds));
             }
+
+            var canvas = this.provider.getCurrentCanvas();
+
+            this.triggerSocket(Extension.CURRENT_VIEW_URI,
+                {
+                    "cropUri": (<ISeadragonProvider>that.provider).getCroppedImageUri(canvas, this.getViewer(), true),
+                    "fullUri": (<ISeadragonProvider>that.provider).getConfinedImageUri(canvas, canvas.width, canvas.height)
+                });
         });
 
         $.subscribe(baseCenter.SeadragonCenterPanel.SEADRAGON_ROTATION, (e, rotation) => {
@@ -175,6 +187,10 @@ export class Extension extends baseExtension.BaseExtension {
             $.publish(embed.EmbedDialogue.SHOW_EMBED_DIALOGUE);
         });
 
+        $.subscribe(footer.FooterPanel.DOWNLOAD, (e) => {
+            $.publish(download.DownloadDialogue.SHOW_DOWNLOAD_DIALOGUE);
+        });
+
         // dependencies
         var deps = overrideDependencies || dependencies;
         require(_.values(deps), function () {
@@ -188,6 +204,11 @@ export class Extension extends baseExtension.BaseExtension {
 
             if (!that.provider.isReload){
                 canvasIndex = parseInt(that.getParam(baseProvider.params.canvasIndex)) || that.provider.getStartCanvasIndex();
+            }
+
+            if (that.provider.isCanvasIndexOutOfRange(canvasIndex)){
+                that.showDialogue(that.provider.config.content.canvasIndexOutOfRange);
+                return;
             }
 
             that.viewPage(canvasIndex || that.provider.getStartCanvasIndex());
@@ -227,6 +248,10 @@ export class Extension extends baseExtension.BaseExtension {
         shell.Shell.$overlays.append(this.$embedDialogue);
         this.embedDialogue = new embed.EmbedDialogue(this.$embedDialogue);
 
+        this.$downloadDialogue = $('<div class="overlay download"></div>');
+        shell.Shell.$overlays.append(this.$downloadDialogue);
+        this.downloadDialogue = new download.DownloadDialogue(this.$downloadDialogue);
+
         this.$settingsDialogue = $('<div class="overlay settings"></div>');
         shell.Shell.$overlays.append(this.$settingsDialogue);
         this.settingsDialogue = new settingsDialogue.SettingsDialogue(this.$settingsDialogue);
@@ -242,6 +267,14 @@ export class Extension extends baseExtension.BaseExtension {
         if (this.isRightPanelEnabled()){
             this.rightPanel.init();
         }
+    }
+
+    updateSettings(): void {
+        this.provider.reloadManifest(() => {
+            $.publish(baseExtension.BaseExtension.RELOAD_MANIFEST);
+            this.viewPage(this.provider.canvasIndex, true);
+            $.publish(Extension.SETTINGS_CHANGED);
+        });
     }
 
     setDefaultFocus(): void {
@@ -290,6 +323,10 @@ export class Extension extends baseExtension.BaseExtension {
             $.publish(Extension.OPEN_MEDIA, [uri]);
             this.setParam(baseProvider.params.canvasIndex, canvasIndex);
         });
+    }
+
+    getViewer() {
+        return this.centerPanel.viewer;
     }
 
     getMode(): string {

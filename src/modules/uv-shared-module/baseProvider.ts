@@ -41,6 +41,7 @@ export class BaseProvider implements IProvider{
     treeRoot: TreeNode;
     jsonp: boolean;
     locale: string;
+    locales: any[];
 
     // map param names to enum indices.
     paramMap: string[] = ['asi', 'ai', 'z', 'r'];
@@ -60,7 +61,7 @@ export class BaseProvider implements IProvider{
         // other data-attributes are retrieved through app.getParam.
         this.manifestUri = this.bootstrapper.params.manifestUri;
         this.jsonp = this.bootstrapper.params.jsonp;
-        this.locale = this.bootstrapper.params.locale;
+        this.locale = this.bootstrapper.params.getLocale();
         this.isHomeDomain = this.bootstrapper.params.isHomeDomain;
         this.isReload = this.bootstrapper.params.isReload;
         this.embedDomain = this.bootstrapper.params.embedDomain;
@@ -162,6 +163,16 @@ export class BaseProvider implements IProvider{
         return this.getRootStructure().sectionType.toLowerCase();
     }
 
+    getManifestation(type: string): string {
+        var service = this.sequence.service;
+
+        if (service && service["profile"] === "http://iiif.io/api/otherManifestations.json"){
+            if (service.format.endsWith("pdf")){
+                return service["@id"];
+            }
+        }
+    }
+
     getSequenceType(): string{
         return this.sequence.assetType.replace('/', '-');
     }
@@ -188,6 +199,10 @@ export class BaseProvider implements IProvider{
 
     getSeeAlso(): any {
         return this.sequence.seeAlso;
+    }
+
+    isCanvasIndexOutOfRange(canvasIndex: number): boolean {
+        return canvasIndex > this.getTotalCanvases() - 1;
     }
 
     isFirstCanvas(canvasIndex?: number): boolean {
@@ -639,8 +654,93 @@ export class BaseProvider implements IProvider{
         return $elem.contents().html();
     }
 
-    getLocales(): any {
-        return this.config.localisation.locales;
+    getLocales(): any[] {
+        if (this.locales) return this.locales;
+
+        // use data-locales to prioritise
+        var items = this.config.localisation.locales.clone();
+        var sorting = this.bootstrapper.params.locales;
+        var result = [];
+
+        // loop through sorting array
+        // if items contains sort item, add it to results.
+        // if sort item has a label, substitute it
+        // mark item as added.
+        // loop through remaining items and add to results.
+
+        _.each(sorting, (sortItem: any) => {
+            var match = _.filter(items, (item: any) => { return item.name === sortItem.name; });
+            if (match.length){
+                var m: any = match[0];
+                if (sortItem.label) m.label = sortItem.label;
+                m.added = true;
+                result.push(m);
+            }
+        });
+
+        _.each(items, (item: any) => {
+            if (!item.added){
+                result.push(item);
+            }
+            delete item.added;
+        });
+
+        return this.locales = result;
+    }
+
+    getAlternateLocale(): any {
+        var locales = this.getLocales();
+
+        var alternateLocale;
+
+        for (var i = 0; i < locales.length; i++) {
+            var l = locales[i];
+            if (l.name !== this.locale) {
+                alternateLocale = l;
+            }
+        }
+
+        return l;
+    }
+
+    changeLocale(locale: string): void {
+        // if the current locale is "en-GB:English,cy-GB:Welsh"
+        // and "cy-GB" is passed, it becomes "cy-GB:Welsh,en-GB:English"
+
+        // re-order locales so the passed locale is first
+        var locales = this.locales.clone();
+
+        var index = locales.indexOfTest((l: any) => {
+            return l.name === locale;
+        });
+
+        locales.move(index, 0);
+
+        // convert to comma-separated string
+        var str = this.serializeLocales(locales);
+
+        var p = new BootstrapParams();
+        p.setLocale(str);
+        this.reload(p);
+    }
+
+    serializeLocales(locales: any[]): string {
+        var str = '';
+
+        for (var i = 0; i < locales.length; i++){
+            var l = locales[i];
+            if (i > 0) str += ',';
+            str += l.name;
+            if (l.label){
+                str += ':' + l.label;
+            }
+        }
+
+        return str;
+    }
+
+    getSerializedLocales(): string {
+        return this.serializeLocales(this.locales);
     }
 
     getLabel(resource): string {

@@ -1,6 +1,10 @@
 {
   "name": "Universal Viewer",
+<<<<<<< HEAD
   "version": "1.0.41",
+=======
+  "version": "1.0.46",
+>>>>>>> a9642577de76cf8fb61f2d42cffdf8a7c8e9e385
   "repository": {
     "type": "git",
     "url": "git://github.com/BritishLibrary/UniversalViewer"
