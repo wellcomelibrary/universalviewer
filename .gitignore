@@ -70,6 +70,7 @@ node_modules
 !src/js/*.js
 !src/*/*/js/*.js
 !src/examples/*.js
+!src/extensions/*/dependencies.js
 
 #################
 ## Build

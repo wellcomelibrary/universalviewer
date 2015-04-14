@@ -220,7 +220,7 @@ module.exports = function (grunt) {
         },
 
         replace: {
-            // convert extension dynamic dependency files to use simplified commonjs wrapper.
+            // convert dependency files to use simplified commonjs wrapper.
             dependenciesSimplify: {
                 src: ['src/extensions/**/dependencies.js'],
                 overwrite: true,
@@ -238,15 +238,19 @@ module.exports = function (grunt) {
                     to: ': \'$1\''
                 }]
             },
-            // replace "./dependencies" with "../../[extension]-dependencies"
+
+            // ../../extensions/uv-seadragon-extension/dependencies
+            // becomes
+            // uv-seadragon-extension-dependencies
             dependenciesExtension: {
                 src: ['<%= global.buildDir %>/js/app.js'],
                 overwrite: true,
                 replacements: [{
-                    from: /'extensions\/(.*)\/extension'(.*)(.\/dependencies)/g,
-                    to: '\'extensions/$1/extension\'$2../../$1-dependencies'
+                    from: /..\/..\/extensions\/(.*)\/dependencies/g,
+                    to: '$1-dependencies'
                 }]
             },
+
             html: {
                 src: ['<%= global.buildDir %>/app.html'],
                 overwrite: true,

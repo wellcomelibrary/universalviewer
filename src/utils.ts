@@ -125,7 +125,7 @@ window.browserDetect = {
             match = /(trident)(?:.*rv:([\w.]+))?/.exec(ua) || /(msie) ([\w.]+)/.exec(ua) || ['', null, -1],
             ver;
         try {
-            ver = match[2].split('.')[0]; // version
+            ver = (<string>match[2]).split('.')[0]; // version
         }
         catch (err) {
             ver = 'unknown'; //
@@ -227,11 +227,15 @@ export class Utils{
         doc.location.replace(url + newHash);
     }
 
-    static getQuerystringParameter(key: string, doc?: Document): string {
-        if (!doc) doc = window.document;
+    static getQuerystringParameter(key: string, w?: Window): string {
+        if (!w) w = window;
+        return this.getQuerystringParameterFromString(key, w.location.search);
+    }
+
+    static getQuerystringParameterFromString(key: string, querystring: string): string {
         key = key.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
         var regex = new RegExp("[\\?&]" + key + "=([^&#]*)");
-        var match = regex.exec(window.location.search);
+        var match = regex.exec(querystring);
         return(match ? decodeURIComponent(match[1].replace(/\+/g, " ")) : null);
     }
 
@@ -337,7 +341,7 @@ export class Utils{
 
     static convertToRelativeUrl(url: string): string {
         var parts = this.getUrlParts(url);
-        var relUri = parts.pathname + parts.search;
+        var relUri = parts.pathname + parts.searchWithin;
 
         if (!relUri.startsWith("/")) {
             relUri = "/" + relUri;

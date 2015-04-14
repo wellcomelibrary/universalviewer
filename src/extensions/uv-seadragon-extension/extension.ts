@@ -12,11 +12,10 @@ import left = require("../../modules/uv-treeviewleftpanel-module/treeViewLeftPan
 import thumbsView = require("../../modules/uv-treeviewleftpanel-module/thumbsView");
 import galleryView = require("../../modules/uv-treeviewleftpanel-module/galleryView");
 import treeView = require("../../modules/uv-treeviewleftpanel-module/treeView");
-import baseCenter = require("../../modules/uv-seadragoncenterpanel-module/seadragonCenterPanel");
 import center = require("../../modules/uv-seadragoncenterpanel-module/seadragonCenterPanel");
 import baseRight = require("../../modules/uv-shared-module/rightPanel");
 import right = require("../../modules/uv-moreinforightpanel-module/moreInfoRightPanel");
-import footer = require("../../modules/uv-shared-module/footerPanel");
+import footer = require("../../modules/uv-searchfooterpanel-module/footerPanel");
 import help = require("../../modules/uv-dialogues-module/helpDialogue");
 import embed = require("./embedDialogue");
 import download = require("./downloadDialogue");
@@ -25,13 +24,12 @@ import IProvider = require("../../modules/uv-shared-module/iProvider");
 import settings = require("../../modules/uv-shared-module/settings");
 import externalContentDialogue = require("../../modules/uv-dialogues-module/externalContentDialogue");
 import ISeadragonProvider = require("./iSeadragonProvider");
-import dependencies = require("./dependencies");
 
 export class Extension extends baseExtension.BaseExtension {
 
     headerPanel: header.PagingHeaderPanel;
     leftPanel: left.TreeViewLeftPanel;
-    centerPanel: baseCenter.SeadragonCenterPanel;
+    centerPanel: center.SeadragonCenterPanel;
     rightPanel: right.MoreInfoRightPanel;
     footerPanel: footer.FooterPanel;
     $helpDialogue: JQuery;
@@ -44,15 +42,15 @@ export class Extension extends baseExtension.BaseExtension {
     settingsDialogue: settingsDialogue.SettingsDialogue;
     $externalContentDialogue: JQuery;
     externalContentDialogue: externalContentDialogue.ExternalContentDialogue;
-
+    isLoading: boolean = false;
     currentRotation: number = 0;
 
     static mode: string;
     static CURRENT_VIEW_URI: string = 'onCurrentViewUri';
-
-    // modes
     static PAGE_MODE: string = "pageMode";
     static IMAGE_MODE: string = "imageMode";
+    static SEARCH_RESULTS: string = 'onSearchResults';
+    static SEARCH_RESULTS_EMPTY: string = 'onSearchResults'; // todo: should be onSearchResultsEmpty?
 
     constructor(provider: IProvider) {
         super(provider);
@@ -109,6 +107,23 @@ export class Extension extends baseExtension.BaseExtension {
             this.viewPage(index);
         });
 
+        $.subscribe(footer.FooterPanel.SEARCH, (e, terms: string) => {
+            this.triggerSocket(footer.FooterPanel.SEARCH, terms);
+            this.searchWithin(terms);
+        });
+
+        $.subscribe(footer.FooterPanel.VIEW_PAGE, (e, index: number) => {
+            this.viewPage(index);
+        });
+
+        $.subscribe(footer.FooterPanel.NEXT_SEARCH_RESULT, () => {
+            this.nextSearchResult();
+        });
+
+        $.subscribe(footer.FooterPanel.PREV_SEARCH_RESULT, () => {
+            this.prevSearchResult();
+        });
+
         $.subscribe(header.PagingHeaderPanel.UPDATE_SETTINGS, (e) => {
             this.updateSettings();
         });
@@ -156,7 +171,7 @@ export class Extension extends baseExtension.BaseExtension {
             this.resize();
         });
 
-        $.subscribe(baseCenter.SeadragonCenterPanel.SEADRAGON_ANIMATION_FINISH, (e, viewer) => {
+        $.subscribe(center.SeadragonCenterPanel.SEADRAGON_ANIMATION_FINISH, (e, viewer) => {
             if (this.centerPanel){
                 this.setParam(baseProvider.params.zoom, this.centerPanel.serialiseBounds(this.centerPanel.currentBounds));
             }
@@ -170,16 +185,23 @@ export class Extension extends baseExtension.BaseExtension {
                 });
         });
 
-        $.subscribe(baseCenter.SeadragonCenterPanel.SEADRAGON_ROTATION, (e, rotation) => {
+        $.subscribe(center.SeadragonCenterPanel.SEADRAGON_OPEN, () => {
+            // todo: stopgap until this issue is resolved: https://github.com/openseadragon/openseadragon/issues/629
+            setTimeout(() => {
+                this.isLoading = false;
+            }, 500); // only allow a page load every 500 milliseconds
+        });
+
+        $.subscribe(center.SeadragonCenterPanel.SEADRAGON_ROTATION, (e, rotation) => {
             this.currentRotation = rotation;
             this.setParam(baseProvider.params.rotation, rotation);
         });
 
-        $.subscribe(baseCenter.SeadragonCenterPanel.PREV, (e) => {
+        $.subscribe(center.SeadragonCenterPanel.PREV, (e) => {
             this.viewPage(this.provider.getPrevPageIndex());
         });
 
-        $.subscribe(baseCenter.SeadragonCenterPanel.NEXT, (e) => {
+        $.subscribe(center.SeadragonCenterPanel.NEXT, (e) => {
             this.viewPage(this.provider.getNextPageIndex());
         });
 
@@ -192,9 +214,27 @@ export class Extension extends baseExtension.BaseExtension {
         });
 
         // dependencies
-        var deps = overrideDependencies || dependencies;
+        if (overrideDependencies){
+            this.loadDependencies(overrideDependencies);
+        } else {
+            this.getDependencies((deps: any) => {
+                this.loadDependencies(deps);
+            });
+        }
+    }
+
+    // todo: add to baseExtension?
+    getDependencies(callback: (deps: any) => void): any {
+        require(["../../extensions/uv-seadragon-extension/dependencies"], function (deps) {
+            callback(deps);
+        });
+    }
+
+    // todo: add to baseExtension?
+    loadDependencies(deps: any): void {
+        var that = this;
+
         require(_.values(deps), function () {
-            //var deps = _.object(_.keys(dependencies), arguments);
 
             that.createModules();
 
@@ -221,8 +261,6 @@ export class Extension extends baseExtension.BaseExtension {
             // publish created event
             $.publish(Extension.CREATED);
         });
-
-
     }
 
     createModules(): void{
@@ -301,6 +339,13 @@ export class Extension extends baseExtension.BaseExtension {
 
     viewPage(canvasIndex: number, isReload?: boolean): void {
 
+        // todo: stopgap until this issue is resolved: https://github.com/openseadragon/openseadragon/issues/629
+        //if (this.isLoading){
+        //    return;
+        //}
+
+        this.isLoading = true;
+
         // if it's a valid canvas index.
         if (canvasIndex == -1) return;
 
@@ -315,7 +360,7 @@ export class Extension extends baseExtension.BaseExtension {
 
                 return;
             }
-        } 
+        }
 
         this.viewCanvas(canvasIndex, () => {
             var canvas = this.provider.getCanvasByIndex(canvasIndex);
@@ -323,6 +368,7 @@ export class Extension extends baseExtension.BaseExtension {
             $.publish(Extension.OPEN_MEDIA, [uri]);
             this.setParam(baseProvider.params.canvasIndex, canvasIndex);
         });
+
     }
 
     getViewer() {
@@ -401,6 +447,57 @@ export class Extension extends baseExtension.BaseExtension {
             this.viewManifest(data);
         } else {
             this.viewStructure(data.path);
+        }
+    }
+
+    searchWithin(terms) {
+
+        var that = this;
+
+        (<ISeadragonProvider>this.provider).searchWithin(terms, (results: any) => {
+            if (results.resources.length) {
+                $.publish(Extension.SEARCH_RESULTS, [terms, results.resources]);
+
+                // reload current index as it may contain results.
+                that.viewPage(that.provider.canvasIndex, true);
+            } else {
+                that.showDialogue(that.provider.config.modules.genericDialogue.content.noMatches, () => {
+                    $.publish(Extension.SEARCH_RESULTS_EMPTY);
+                });
+            }
+        });
+    }
+
+    clearSearch() {
+        (<ISeadragonProvider>this.provider).searchResults = [];
+
+        // reload current index as it may contain results.
+        this.viewPage(this.provider.canvasIndex);
+    }
+
+    prevSearchResult() {
+
+        // get the first result with a canvasIndex less than the current index.
+        for (var i = (<ISeadragonProvider>this.provider).searchResults.length - 1; i >= 0; i--) {
+            var result = (<ISeadragonProvider>this.provider).searchResults[i];
+
+            if (result.canvasIndex < this.provider.canvasIndex) {
+                this.viewPage(result.canvasIndex);
+                break;
+            }
+        }
+    }
+
+    nextSearchResult() {
+
+        // get the first result with an index greater than the current index.
+        for (var i = 0; i < (<ISeadragonProvider>this.provider).searchResults.length; i++) {
+            var result = (<ISeadragonProvider>this.provider).searchResults[i];
+
+            if (result.canvasIndex > this.provider.canvasIndex) {
+                this.viewPage(result.canvasIndex);
+                break;
+            }
         }
     }
 }

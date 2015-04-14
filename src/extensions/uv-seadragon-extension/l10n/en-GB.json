@@ -3,13 +3,6 @@
         "label": "English (GB)"
     },
     "options": {
-        "sectionMappings": {
-            "CoverFrontOutside": "Front Cover",
-            "CoverBackOutside": "Back Cover",
-            "TitlePage": "Title Page",
-            "TableOfContents": "Table of Contents",
-            "PartOfWork": "Part of Work"
-        }
     },
     "content": {
         "canvasIndexOutOfRange": "Canvas index out of range."
@@ -22,11 +15,12 @@
         },
         "genericDialogue": {
             "content": {
-                "emptyValue": "please enter a value",
-                "pageNotFound": "This item does not contain a page with the number you entered. Try switching the numbering mode to 'image'",
+                "emptyValue": "please enter a value.",
+                "pageNotFound": "This item does not contain a page with the number you entered. Try switching the numbering mode to 'image'.",
                 "ok": "OK",
                 "refresh": "Refresh",
-                "invalidNumber": "Please enter a valid number"
+                "invalidNumber": "Please enter a valid number.",
+                "noMatches": "No matches were found."
             }
         },
         "helpDialogue": {
@@ -120,6 +114,26 @@
                 "exitFullScreen": "Exit Full Screen",
                 "embed": "Embed",
                 "download": "Download"
+            }
+        },
+        "searchFooterPanel":
+        {
+            "content":
+            {
+                "instanceFound": "1 instance of '{0}' found",
+                "instancesFound": "{0} instances of '{1}' found",
+                "resultFoundFor": "result found for",
+                "resultsFoundFor": "results found for",
+                "displaying": "Displaying {0} {1} of {2}",
+                "page": "page",
+                "image": "image",
+                "searchWithin": "Search within this item:",
+                "enterKeyword": "Enter Keyword",
+                "pageCaps": "Page",
+                "imageCaps": "Image",
+                "clearSearch": "Clear Search",
+                "previousResult": "Previous Result",
+                "nextResult": "Next Result"
             }
         }
     }

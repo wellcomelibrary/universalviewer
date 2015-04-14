@@ -1,11 +1,16 @@
 /// <reference path="../../js/jquery.d.ts" />
 /// <reference path="../../js/extensions.d.ts" />
 import BootStrapper = require("../../bootstrapper");
-import baseProvider = require("../../modules/uv-shared-module/baseIIIFProvider");
-import utils = require("../../utils");
+import baseProvider = require("../../modules/uv-shared-module/baseProvider");
 import ISeadragonProvider = require("./iSeadragonProvider");
+import SearchResult = require("./SearchResult");
+import SearchResultRect = require("./SearchResultRect");
+import utils = require("../../utils");
+import util = utils.Utils;
 
 export class Provider extends baseProvider.BaseProvider implements ISeadragonProvider{
+
+    searchResults: SearchResult[] = [];
 
     constructor(bootstrapper: BootStrapper, config: any, manifest: any) {
         super(bootstrapper, config, manifest);
@@ -14,88 +19,16 @@ export class Provider extends baseProvider.BaseProvider implements ISeadragonPro
             // override or extend BaseProvider options.
             // these are in turn overridden by the root options object in this extension's config.js.
             //{baseuri}/{id}/{region}/{size}/{rotation}/{quality}.jpg
+            autoCompleteUriTemplate: '{0}{1}',
             iiifImageUriTemplate: '{0}/{1}/{2}/{3}/{4}/{5}.jpg'
         }, config.options);
     }
 
-    //getCrop(canvas: any, viewer: any, download?: boolean, relativeUri?: boolean): string {
-    //
-    //    var bounds = viewer.viewport.getBounds(true);
-    //    var containerSize = viewer.viewport.getContainerSize();
-    //    var zoom = viewer.viewport.getZoom(true);
-    //
-    //    var top = bounds.y;
-    //    var left = bounds.x;
-    //    var height = bounds.height;
-    //    var width = bounds.width;
-    //
-    //    // change top and height to be normalised values proportional to height of image, not width (as per seadragon).
-    //    //top = 1 / (canvas.height / parseInt(String(canvas.width * top)));
-    //    //height = 1 / (canvas.height / parseInt(String(canvas.width * height)));
-    //
-    //    // get on-screen pixel sizes.
-    //
-    //    var viewportWidthPx = containerSize.x;
-    //    var viewportHeightPx = containerSize.y;
-    //
-    //    var imageWidthPx = parseInt(String(viewportWidthPx * zoom));
-    //    var ratio = canvas.width / imageWidthPx;
-    //    var imageHeightPx = parseInt(String(canvas.height / ratio));
-    //
-    //    var viewportLeftPx = parseInt(String(left * imageWidthPx));
-    //    var viewportTopPx = parseInt(String(top * imageHeightPx));
-    //
-    //    var rect1Left = 0;
-    //    var rect1Right = imageWidthPx;
-    //    var rect1Top = 0;
-    //    var rect1Bottom = imageHeightPx;
-    //
-    //    var rect2Left = viewportLeftPx;
-    //    var rect2Right = viewportLeftPx + viewportWidthPx;
-    //    var rect2Top = viewportTopPx;
-    //    var rect2Bottom = viewportTopPx + viewportHeightPx;
-    //
-    //    var cropWidth = Math.max(0, Math.min(rect1Right, rect2Right) - Math.max(rect1Left, rect2Left))
-    //    var cropHeight = Math.max(0, Math.min(rect1Bottom, rect2Bottom) - Math.max(rect1Top, rect2Top));
-    //
-    //    // end get on-screen pixel sizes.
-    //
-    //    // get original image pixel sizes.
-    //
-    //    var ratio2 = canvas.width / imageWidthPx;
-    //
-    //    var widthPx = parseInt(String(cropWidth * ratio2));
-    //    var heightPx = parseInt(String(cropHeight * ratio2));
-    //
-    //    var topPx = parseInt(String(canvas.height * top));
-    //    var leftPx = parseInt(String(canvas.width * left));
-    //
-    //    if (topPx < 0) topPx = 0;
-    //    if (leftPx < 0) leftPx = 0;
-    //
-    //    // end get original image pixel sizes.
-    //
-    //    var baseUri = this.getImageBaseUri(canvas);
-    //
-    //    //{baseuri}/{id}/{region}/{size}/{rotation}/{quality}.jpg
-    //    var id = this.getImageIdFromUri(canvas);
-    //    var region = leftPx + "," + topPx + "," + widthPx + "," + heightPx;
-    //    var size = 'full';
-    //    var rotation = 0;
-    //    var quality = 'default';
-    //    var uri = String.prototype.format(this.config.options.iiifImageUriTemplate, baseUri, id, region, size, rotation, quality);
-    //
-    //    //if (download) {
-    //    //    uri += "?download=true";
-    //    //}
-    //
-    //    if (relativeUri) {
-    //        // convert to relative uri.
-    //        uri = utils.Utils.convertToRelativeUrl(uri);
-    //    }
-    //
-    //    return uri;
-    //}
+    getAutoCompleteUri(): string{
+        //var baseUri = this.config.options.autoCompleteBaseUri || "";
+        //return String.prototype.format(this.config.options.autoCompleteUriTemplate, baseUri, this.sequence.autoCompletePath);
+        return ""; // todo
+    }
 
     getCroppedImageUri(canvas: any, viewer: any): string {
 
@@ -266,5 +199,82 @@ export class Provider extends baseProvider.BaseProvider implements ISeadragonPro
                 return tileSources;
             }
         }
+    }
+
+    isSearchWithinEnabled(): boolean {
+        if (!util.getBool(this.config.options.searchWithinEnabled, false)){
+            return false;
+        }
+
+        if (!this.getSearchWithinService()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    getSearchWithinService(): string {
+        if (this.manifest.service){
+            if (this.manifest.service.profile === "http://iiif.io/api/search/1/"){
+                return this.manifest.service;
+            }
+        }
+
+        return null;
+    }
+
+    getSearchWithinServiceUri(): string {
+        var service = this.getSearchWithinService();
+
+        if (!service) return null;
+
+        var uri = service["@id"];
+        uri = uri.substr(0, uri.indexOf('{'));
+        uri = uri + "&q={0}";
+        return uri;
+    }
+
+    searchWithin(terms: string, callback: (results: any) => void): void {
+        var that = this;
+
+        var searchUri = this.getSearchWithinServiceUri();
+
+        searchUri = String.prototype.format(searchUri, terms);
+
+        $.getJSON(searchUri, (results: any) => {
+            if (results.resources.length) {
+                that.parseSearchWithinResults(results);
+            }
+
+            callback(results);
+        });
+    }
+
+    parseSearchWithinResults(results: any): void {
+        this.searchResults = [];
+
+        for (var i = 0; i < results.resources.length; i++) {
+            var r = results.resources[i];
+
+            var sr = new SearchResult(r);
+
+            var match = this.getSearchResultByCanvasIndex(sr.canvasIndex);
+
+            if (match){
+                match.addRect(r);
+            } else {
+                this.searchResults.push(sr);
+            }
+        }
+    }
+
+    getSearchResultByCanvasIndex(canvasIndex: number): SearchResult {
+        for (var i = 0; i < this.searchResults.length; i++) {
+            var r = this.searchResults[i];
+            if (r.canvasIndex === canvasIndex){
+                return r;
+            }
+        }
+        return null;
     }
 }
