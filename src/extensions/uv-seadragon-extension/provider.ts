@@ -5,11 +5,13 @@ import baseProvider = require("../../modules/uv-shared-module/baseProvider");
 import ISeadragonProvider = require("./iSeadragonProvider");
 import SearchResult = require("./SearchResult");
 import SearchResultRect = require("./SearchResultRect");
+import Page = require("./Page");
 import utils = require("../../utils");
 import util = utils.Utils;
 
 export class Provider extends baseProvider.BaseProvider implements ISeadragonProvider{
 
+    pages: Page[];
     searchResults: SearchResult[] = [];
 
     constructor(bootstrapper: BootStrapper, config: any, manifest: any) {
@@ -174,31 +176,45 @@ export class Provider extends baseProvider.BaseProvider implements ISeadragonPro
         return script;
     }
 
-    getTileSources(): any[] {
+    getPages(): JQueryDeferred<any> {
 
-        if (!this.isPaged()){
-            return [{
-                tileSource: this.getImageUri(this.getCurrentCanvas())
-            }];
+        this.pages = [];
+
+        if (!this.isPaged()){ // if single-up mode
+            var p: Page = new Page();
+            p.tileSourceUri = this.getImageUri(this.getCurrentCanvas());
+            this.pages.push(p);
         } else {
             if (this.isFirstCanvas() || this.isLastCanvas()){
-                return [{
-                    tileSource: this.getImageUri(this.getCurrentCanvas())
-                }];
+                var p: Page = new Page();
+                p.tileSourceUri = this.getImageUri(this.getCurrentCanvas());
+                this.pages.push(p);
             } else {
                 var indices = this.getPagedIndices();
 
-                var tileSources: any[] = [];
-
                 _.each(indices, (index) => {
-                    tileSources.push({
-                        tileSource: this.getImageUri(this.getCanvasByIndex(index))
-                    });
+                    var p: Page = new Page();
+                    p.tileSourceUri = this.getImageUri(this.getCanvasByIndex(index));
+                    this.pages.push(p);
                 });
-
-                return tileSources;
             }
         }
+
+        // todo: use compiler flag (when available)
+        var imageUnavailableUri = (window.DEBUG)? '/src/extensions/uv-seadragon-extension/js/imageunavailable.js' : 'js/imageunavailable.js';
+
+        _.each(this.pages, (page: Page) => {
+            if (!page.tileSourceUri){
+                page.tileSourceUri = imageUnavailableUri
+            }
+        });
+
+        // get the json-ld for each page and return.
+        var promises = _.map(this.pages, (page: Page) => {
+            return page.GetTileSource();
+        });
+
+        return $.when.apply($, promises);
     }
 
     isSearchWithinEnabled(): boolean {

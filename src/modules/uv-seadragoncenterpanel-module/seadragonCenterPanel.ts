@@ -8,13 +8,13 @@ import baseCenter = require("../uv-shared-module/centerPanel");
 import ISeadragonProvider = require("../../extensions/uv-seadragon-extension/iSeadragonProvider");
 import SearchResult = require("../../extensions/uv-seadragon-extension/SearchResult");
 import SearchResultRect = require("../../extensions/uv-seadragon-extension/SearchResultRect");
+import Page = require("../../extensions/uv-seadragon-extension/Page");
 import utils = require("../../utils");
 import util = utils.Utils;
 
 export class SeadragonCenterPanel extends baseCenter.CenterPanel {
 
-    lastTilesNum: number;
-    tileSources: any[];
+    pages: Page[];
     userData: any;
     handler: any;
     prevButtonEnabled: boolean = false;
@@ -25,7 +25,6 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
     title: string;
     currentBounds: any;
     isFirstLoad: boolean = true;
-    isLoading: boolean = false;
     controlsVisible: boolean = false;
     isCreated: boolean = false;
 
@@ -74,14 +73,13 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
     // todo: implement a listener for an onResized event
     tryLoad(): void {
         //console.log("try load");
-        if (this.isLoading) return;
         if (!this.isCreated) {
             setTimeout(() => {
                 this.createUI();
-                this.loadTileSources();
+                this.loadPages();
             }, 500); // allow time for panel open animations to complete.
         } else {
-            this.loadTileSources();
+            this.loadPages();
         }
     }
 
@@ -215,7 +213,7 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
 
         this.viewer.addHandler('open', (viewer) => {
             $.publish(SeadragonCenterPanel.SEADRAGON_OPEN, [viewer]);
-            this.openTileSourcesHandler();
+            this.openPagesHandler();
         });
 
         //this.viewer.addHandler("open-failed", () => {
@@ -298,48 +296,47 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
         });
     }
 
-    loadTileSources(): void {
-
-        //console.log("load tile sources");
-
-        this.isLoading = true;
-
-        this.tileSources = this.provider.getTileSources();
+    loadPages(): void {
 
         this.$spinner.show();
 
-        // todo: use compiler flag (when available)
-        var imageUnavailableUri = (window.DEBUG)? '/src/extensions/uv-seadragon-extension/js/imageunavailable.js' : 'js/imageunavailable.js';
-
-        _.each(this.tileSources, function(ts) {
-            if (!ts.tileSource){
-                ts.tileSource = imageUnavailableUri
-            }
+        this.provider.getPages().then(() => {
+            this.viewer.open(util.convertToPlainObject(this.provider.pages));
         });
-
-        //this.viewer.addHandler('open', this.openTileSourcesHandler, this);
-        //this.viewer.world.resetItems();
-        this.viewer.open(this.tileSources[0]);
     }
 
-    openTileSourcesHandler() {
-
+    positionPages() {
         var viewingDirection = this.provider.getViewingDirection();
 
-        // if there's more than one tilesource, align them next to each other.
-        if (this.tileSources.length > 1) {
+        // if there's more than one page, align them next to each other.
+        if (this.provider.pages.length > 1) {
 
             // check if tilesources should be aligned horizontally or vertically
             if (viewingDirection == "top-to-bottom" || viewingDirection == "bottom-to-top") {
                 // vertical
-                this.tileSources[1].y = this.viewer.world.getItemAt(0).getBounds().y + this.viewer.world.getItemAt(0).getBounds().height + this.config.options.pageGap;
+                var topPage = this.viewer.world.getItemAt(0);
+                var topPageBounds = topPage.getBounds(true);
+                var y = topPageBounds.y + topPageBounds.height;
+                var bottomPage = this.viewer.world.getItemAt(1);
+                var bottomPagePos = bottomPage.getBounds(true).getTopLeft();
+                bottomPagePos.y = y + this.config.options.pageGap;
+                bottomPage.setPosition(bottomPagePos, true);
             } else {
                 // horizontal
-                this.tileSources[1].x = this.viewer.world.getItemAt(0).getBounds().x + this.viewer.world.getItemAt(0).getBounds().width + this.config.options.pageGap;
+                var leftPage = this.viewer.world.getItemAt(0);
+                var leftPageBounds = leftPage.getBounds(true);
+                var x = leftPageBounds.x + leftPageBounds.width;
+                var rightPage = this.viewer.world.getItemAt(1);
+                var rightPagePos = rightPage.getBounds(true).getTopLeft();
+                rightPagePos.x = x + this.config.options.pageGap;
+                rightPage.setPosition(rightPagePos, true);
             }
-
-            this.viewer.addTiledImage(this.tileSources[1]);
         }
+    }
+
+    openPagesHandler() {
+
+        this.positionPages();
 
         // check for initial zoom/rotation params.
         if (this.isFirstLoad){
@@ -386,9 +383,7 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
             }
         }
 
-        this.lastTilesNum = this.tileSources.length;
         this.isFirstLoad = false;
-        this.isLoading = false;
         this.$spinner.hide();
         this.overlaySearchResults();
     }
@@ -440,11 +435,11 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
 
         switch (viewingDirection){
             case "top-to-bottom" :
-                this.viewer.viewport.fitBounds(new OpenSeadragon.Rect(0, 0, 1, this.viewer.world.getItemAt(0).normHeight * this.tileSources.length), true);
+                this.viewer.viewport.fitBounds(new OpenSeadragon.Rect(0, 0, 1, this.viewer.world.getItemAt(0).normHeight * this.provider.pages.length), true);
                 break;
             case "left-to-right" :
             case "right-to-left" :
-                this.viewer.viewport.fitBounds(new OpenSeadragon.Rect(0, 0, this.tileSources.length, this.viewer.world.getItemAt(0).normHeight), true);
+                this.viewer.viewport.fitBounds(new OpenSeadragon.Rect(0, 0, this.provider.pages.length, this.viewer.world.getItemAt(0).normHeight), true);
                 break;
         }
     }
@@ -524,7 +519,6 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
 
     overlaySearchResults(): void {
 
-        // loop through entries to get those for the current index.
         var searchResults = this.provider.searchResults;
 
         if (!searchResults.length) return;
@@ -534,9 +528,8 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
         for (var i = 0; i < indices.length; i++){
             var canvasIndex = indices[i];
 
-            var searchResult: SearchResult;
+            var searchResult: SearchResult = null;
 
-            // todo: rtl and ttb support
             for (var j = 0; j < searchResults.length; j++) {
                 if (searchResults[j].canvasIndex === canvasIndex) {
                     searchResult = searchResults[j];
@@ -562,20 +555,21 @@ export class SeadragonCenterPanel extends baseCenter.CenterPanel {
     getSearchOverlayRects(rects: SearchResultRect[], index: number) {
         var newRects = [];
 
-        this.tileSources[index]
+        var width = this.viewer.world.getItemAt(index).source.dimensions.x;
+        var offsetX = 0;
 
-        var offsetX = this.viewer.world.getItemAt(index).getBounds().x;
-        var width = this.viewer.world.getItemAt(index).getBounds().width;
+        if (index > 0){
+            offsetX = this.viewer.world.getItemAt(index - 1).source.dimensions.x;
+        }
 
         for (var i = 0; i < rects.length; i++) {
             var searchRect: SearchResultRect = rects[i];
 
-            // normalise into seadragon points.
             var factor = 1 / width;
-            var x = (factor * searchRect.x) + (factor * offsetX);
-            var y = factor * searchRect.y;
-            var w = factor * searchRect.width;
-            var h = factor * searchRect.height;
+            var x = factor * (Number(searchRect.x) + offsetX) + ((index > 0) ? this.config.options.pageGap : 0);
+            var y = factor * Number(searchRect.y);
+            var w = factor * Number(searchRect.width);
+            var h = factor * Number(searchRect.height);
 
             var rect = new OpenSeadragon.Rect(x, y, w, h);
 
