@@ -2,15 +2,6 @@
   "localisation": {
     "label": "Cymraeg"
   },
-  "options": {
-    "sectionMappings": {
-      "CoverFrontOutside": "Clawr blaen",
-      "CoverBackOutside": "Clawr cefn",
-      "TitlePage": "Tudalen deitl",
-      "TableOfContents": "Tabl Cynnwys",
-      "PartOfWork": "Rhan o waith"
-    }
-  },
   "content": {
     "canvasIndexOutOfRange": "Mynegai gynfas tu hwnt i'r amrediad"
   },
@@ -22,11 +13,12 @@
     },
     "genericDialogue": {
       "content": {
-        "emptyValue": "rhowch rif",
-        "pageNotFound": "Nid yw'r eitem yn cynnwys tudalen gyda'r rhif a nodwyd. Ceisiwch cyfnewid y math i 'delwedd'.",
+        "emptyValue": "os gwelwch yn dda mynd i mewn i werth",
+        "pageNotFound": "Nid yw hyn eitem yn cynnwys tudalen gyda'r rhif roddoch. Rhowch gynnig newid y modd rhifo i 'delwedd'.",
         "ok": "GWELD",
         "refresh": "Ailosod",
-        "invalidNumber": "Mewnosodwch rif dilys"
+        "invalidNumber": "Rhowch rif dilys",
+        "noMatches": "Cafwyd hyd Dim canlyniadau sy'n cyfateb."
       }
     },
     "helpDialogue": {
@@ -120,6 +112,24 @@
         "exitFullScreen": "Dianc o'r sgrin lawn",
         "embed": "Ymgorffori",
         "download": "Lawrlwytho"
+      }
+    },
+    "searchFooterPanel": {
+      "content": {
+        "instanceFound": "1 enghraifft o '{0}' dod o hyd",
+        "instancesFound": "{0} enghreifftiau o '{1}' dod o hyd",
+        "resultFoundFor": "canlyniad a geir ar gyfer",
+        "resultsFoundFor": "o ganlyniadau ar gyfer",
+        "displaying": "Arddangos {0} {1} o {2}",
+        "page": "dudalen",
+        "image": "image",
+        "searchWithin": "Chwilio o fewn eitem hon:",
+        "enterKeyword": "Rhowch Allweddair",
+        "pageCaps": "tudalen",
+        "imageCaps": "delwedd",
+        "clearSearch": "Chwilio clir",
+        "previousResult": "Canlyniad blaenorol",
+        "nextResult": "Canlyniad nesaf"
       }
     }
   }
