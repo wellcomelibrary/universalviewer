@@ -88,6 +88,13 @@
                 "downloadEnabled": true,
                 "minimiseButtons": false
             }
+        },
+        "searchFooterPanel":
+        {
+            "options":{
+                "elideDetailsTermsCount": 20,
+                "elideResultsTermsCount": 5
+            }
         }
     }
 }
