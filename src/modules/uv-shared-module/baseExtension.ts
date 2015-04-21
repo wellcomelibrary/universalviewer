@@ -18,7 +18,6 @@ export class BaseExtension implements IExtension {
     shifted: boolean = false;
     $element: JQuery;
     extensions: any;
-    socket: any;
     provider: IProvider;
 
     // events
@@ -65,7 +64,7 @@ export class BaseExtension implements IExtension {
 
         if (!this.provider.isReload){
             // communication with parent frame.
-            this.socket = new easyXDM.Socket({
+            window.socket = new easyXDM.Socket({
                 onMessage: (message, origin) => {
                     message = $.parseJSON(message);
                     this.handleParentFrameEvent(message);
@@ -155,8 +154,8 @@ export class BaseExtension implements IExtension {
     }
 
     triggerSocket(eventName: string, eventObject?: any): void {
-        if (this.socket) {
-            this.socket.postMessage(JSON.stringify({ eventName: eventName, eventObject: eventObject }));
+        if (window.socket) {
+            window.socket.postMessage(JSON.stringify({ eventName: eventName, eventObject: eventObject }));
         }
     }
 

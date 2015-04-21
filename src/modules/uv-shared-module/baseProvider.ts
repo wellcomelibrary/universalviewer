@@ -111,6 +111,8 @@ export class BaseProvider implements IProvider{
 
         $.disposePubSub();
 
+        //window.extension.socket.destroy();
+
         this.bootstrapper.bootStrap(p);
     }
 
