@@ -95,8 +95,6 @@ src/extensions/*
 src/modules/*
 !src/modules/uv*
 
-src/extensions/*/config/*.config.js
-
 #################
 ## Eclipse
 #################
