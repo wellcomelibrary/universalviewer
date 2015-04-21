@@ -6,6 +6,12 @@ Navigate sequences of images in a zoomable, extensible interface.
 
 [Google group](https://groups.google.com/forum/#!forum/universalviewer)
 
+## Contributers
+
+![Wellcome Library](https://raw.githubusercontent.com/UniversalViewer/universalviewer/master/assets/wellcome_logo.png "Wellcome Library")
+![British Library](https://raw.githubusercontent.com/UniversalViewer/universalviewer/master/assets/bl_logo.png "British Library")
+![National Library of Wales](https://raw.githubusercontent.com/UniversalViewer/universalviewer/master/assets/nlw_logo.png "National Library of Wales")
+
 ## Stable Builds
 
 See the [GitHub releases page](https://github.com/UniversalViewer/UniversalViewer/releases).
