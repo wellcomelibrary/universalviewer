@@ -20,7 +20,6 @@ export class BaseExtension implements IExtension {
     shifted: boolean = false;
     $element: JQuery;
     extensions: any;
-    provider: IProvider;
 
     // events
     static SETTINGS_CHANGED: string = 'onSettingsChanged';
