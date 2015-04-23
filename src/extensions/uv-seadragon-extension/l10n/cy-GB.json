@@ -13,12 +13,12 @@
     },
     "genericDialogue": {
       "content": {
-        "emptyValue": "os gwelwch yn dda mynd i mewn i werth",
-        "pageNotFound": "Nid yw hyn eitem yn cynnwys tudalen gyda'r rhif roddoch. Rhowch gynnig newid y modd rhifo i 'delwedd'.",
+        "emptyValue": "rhowch rif",
+        "pageNotFound": "Nid yw'r eitem yn cynnwys tudalen gyda'r rhif a nodwyd. Ceisiwch cyfnewid y math i 'delwedd'.",
         "ok": "GWELD",
         "refresh": "Ailosod",
         "invalidNumber": "Rhowch rif dilys",
-        "noMatches": "Cafwyd hyd Dim canlyniadau sy'n cyfateb."
+        "noMatches": "Dim canlyniad sy'n cyfateb."
       }
     },
     "helpDialogue": {
@@ -116,18 +116,18 @@
     },
     "searchFooterPanel": {
       "content": {
-        "instanceFound": "1 enghraifft o '{0}' dod o hyd",
-        "instancesFound": "{0} enghreifftiau o '{1}' dod o hyd",
+        "instanceFound": "Dangos 1 canlyniad ar gyfer '{0}' ",
+        "instancesFound": "Dangos {0} canlyniad o '{1}' ",
         "resultFoundFor": "canlyniad a geir ar gyfer",
-        "resultsFoundFor": "o ganlyniadau ar gyfer",
-        "displaying": "Arddangos {0} {1} o {2}",
-        "page": "dudalen",
-        "image": "image",
-        "searchWithin": "Chwilio o fewn eitem hon:",
-        "enterKeyword": "Rhowch Allweddair",
+        "resultsFoundFor": "canlyniad ar gyfer",
+        "displaying": "Dangos {0} {1} o {2}",
+        "page": "tudalen",
+        "image": "delwedd",
+        "searchWithin": "Chwilio tu fewn i:",
+        "enterKeyword": "Mewnosodwch allweddair",
         "pageCaps": "tudalen",
         "imageCaps": "delwedd",
-        "clearSearch": "Chwilio clir",
+        "clearSearch": "Clirio bob dewis",
         "previousResult": "Canlyniad blaenorol",
         "nextResult": "Canlyniad nesaf"
       }
