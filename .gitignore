@@ -13,6 +13,7 @@
 src/themes/*
 !src/themes/uv-default-theme
 !src/themes/nlw-theme
+!src/themes/en-GB-theme
 
 #################
 ## Tests
