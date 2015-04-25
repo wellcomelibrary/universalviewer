@@ -2,7 +2,7 @@
 {
     "options":
     {
-        "theme": "nlw-theme",
+        "theme": "cy-GB-theme",
         "leftPanelEnabled": true,
         "rightPanelEnabled": true,
         "overrideFullScreen": false,
