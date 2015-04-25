@@ -11,9 +11,8 @@
 #################
 
 src/themes/*
-!src/themes/uv-default-theme
-!src/themes/nlw-theme
 !src/themes/en-GB-theme
+!src/themes/cy-GB-theme
 
 #################
 ## Tests
