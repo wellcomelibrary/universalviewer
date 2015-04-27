@@ -2,6 +2,8 @@
 
 [Demo](http://universalviewer.azurewebsites.net/)
 
+[National Library of Wales Demo](http://nlw.azurewebsites.net/)
+
 [Google group](https://groups.google.com/forum/#!forum/universalviewer)
 
 ## Contributors
