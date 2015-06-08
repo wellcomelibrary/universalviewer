@@ -3,6 +3,7 @@
 import baseLeft = require("../uv-shared-module/leftPanel");
 import utils = require("../../utils");
 import tree = require("./treeView");
+import TreeNode = require("../uv-shared-module/treeNode");
 import thumbs = require("./thumbsView");
 import gallery = require("./galleryView");
 import baseView = require("../uv-shared-module/baseView");
@@ -21,6 +22,7 @@ export class TreeViewLeftPanel extends baseLeft.LeftPanel {
     $treeView: JQuery;
     $thumbsView: JQuery;
     $galleryView: JQuery;
+    treeData: TreeNode;
     treeView: tree.TreeView;
     thumbsView: thumbs.ThumbsView;
     galleryView: gallery.GalleryView;
@@ -115,7 +117,7 @@ export class TreeViewLeftPanel extends baseLeft.LeftPanel {
 
     dataBindTreeView(): void{
         if (!this.treeView) return;
-        this.treeView.rootNode = this.provider.getTree();
+        this.treeView.rootNode = this.treeData;
         this.treeView.dataBind();
     }
 
@@ -161,6 +163,12 @@ export class TreeViewLeftPanel extends baseLeft.LeftPanel {
 
             var treeEnabled = utils.Utils.getBool(this.config.options.treeEnabled, true);
             var thumbsEnabled = utils.Utils.getBool(this.config.options.thumbsEnabled, true);
+
+            this.treeData = this.provider.getTree();
+
+            if (!this.treeData.nodes.length) {
+                treeEnabled = false;
+            }
 
             // hide the tabs if either tree or thumbs are disabled.
             if (!treeEnabled || !thumbsEnabled) this.$tabs.hide();

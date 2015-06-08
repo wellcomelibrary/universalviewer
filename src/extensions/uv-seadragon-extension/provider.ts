@@ -6,7 +6,7 @@ import ISeadragonProvider = require("./iSeadragonProvider");
 import SearchResult = require("./SearchResult");
 import SearchResultRect = require("./SearchResultRect");
 import Page = require("./Page");
-import ServiceProfile = require("../../modules/uv-shared-module/serviceProfile");
+import ServiceProfile = require("../../modules/uv-shared-module/ServiceProfile");
 import utils = require("../../utils");
 import util = utils.Utils;
 
@@ -144,18 +144,11 @@ export class Provider extends baseProvider.BaseProvider implements ISeadragonPro
 
         if (!iiifUri){
             console.warn('no service endpoint available');
-        }else if (iiifUri.endsWith('/')){
-            if (!this.corsEnabled()){
-                iiifUri += 'info.js';
-            } else {
-                iiifUri += 'info.json';
-            }
         } else {
-            if (!this.corsEnabled()) {
-                iiifUri += '/info.js';
-            } else {
-                iiifUri += '/info.json';
+            if (!iiifUri.endsWith('/')) {
+                iiifUri += '/';
             }
+            iiifUri += this.corsEnabled() ? 'info.json' : 'info.js';
         }
 
         return iiifUri;
