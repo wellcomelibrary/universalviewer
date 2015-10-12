@@ -25,8 +25,8 @@
     "manifesto": "universalviewer/manifesto#dev",
     "r.js": "~2.1.18",
     "utils": "edsilv/utils#~0.0.23",
-    "uv-cy-GB-theme": "universalviewer/uv-cy-GB-theme",
-    "uv-en-GB-theme": "universalviewer/uv-en-GB-theme",
+    "uv-cy-GB-theme": "wellcomelibrary/uv-cy-GB-theme",
+    "uv-en-GB-theme": "wellcomelibrary/uv-en-GB-theme",
     "exjs": "~0.3.0"
   }
 }
