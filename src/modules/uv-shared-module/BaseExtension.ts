@@ -13,8 +13,6 @@ import IProvider = require("./IProvider");
 import LoginDialogue = require("../../modules/uv-dialogues-module/LoginDialogue");
 import Params = require("../../Params");
 import Shell = require("./Shell");
-import Storage = require("../../modules/uv-shared-module/Storage");
-import StorageItem = require("../../modules/uv-shared-module/StorageItem");
 
 class BaseExtension implements IExtension {
 
@@ -141,25 +139,34 @@ class BaseExtension implements IExtension {
                 }
             });
             
-            if (!this.useArrowKeysToNavigate()) {
-                $(document).keydown((e) => {
-                    //Prevent home, end, page up and page down from scrolling the window.
-                    if (e.keyCode === 33 || e.keyCode === 34 || e.keyCode === 35 || e.keyCode === 36)
-                        e.preventDefault();
+            $(document).keydown((e) => {
+                //Prevent home, end, page up and page down from scrolling the window.
+                if (e.keyCode === 33 || e.keyCode === 34 || e.keyCode === 35 || e.keyCode === 36)
+                    e.preventDefault();
 
-                    var event: string = null;
+                var event: string = null;
+
+                if (!this.useArrowKeysToNavigate()) {
+                    //Prevent arrow keys from their default action.
+                    if (e.keyCode === 37 || e.keyCode === 38 || e.keyCode === 39 || e.keyCode === 40)
+                        e.preventDefault();
 
                     if (e.keyCode === 37) event = BaseCommands.LEFT_ARROW;
                     if (e.keyCode === 38) event = BaseCommands.UP_ARROW;
                     if (e.keyCode === 39) event = BaseCommands.RIGHT_ARROW;
                     if (e.keyCode === 40) event = BaseCommands.DOWN_ARROW;
+                }
 
-                    if (event) {
-                        e.preventDefault();
-                        $.publish(event);
-                    }
-                });
-            }
+                if (e.keyCode === 107 || e.keyCode === 171 || e.keyCode === 187)
+                    event = BaseCommands.PLUS;
+                if (e.keyCode === 109 || e.keyCode === 173 || e.keyCode === 189)
+                    event = BaseCommands.MINUS;
+
+                if (event) {
+                    $.publish(event);
+                }
+            });
+            
 
             if (this.bootstrapper.params.isHomeDomain && Utils.Documents.IsInIFrame()) {
                 $(parent.document).on('fullscreenchange webkitfullscreenchange mozfullscreenchange MSFullscreenChange', (e) => {
@@ -181,6 +188,10 @@ class BaseExtension implements IExtension {
 
         $.subscribe(BaseCommands.AUTHORIZATION_OCCURRED, () => {
             this.triggerSocket(BaseCommands.AUTHORIZATION_OCCURRED);
+        });
+
+        $.subscribe(BaseCommands.BOOKMARK, () => {
+            this.bookmark();
         });
 
         $.subscribe(BaseCommands.CANVAS_INDEX_CHANGE_FAILED, () => {
@@ -699,6 +710,22 @@ class BaseExtension implements IExtension {
         return Utils.Bools.GetBool(this.provider.config.options.useArrowKeysToNavigate, true);
     }
 
+    bookmark(): void {
+        // override for each extension
+    }
+
+    getBookmarkUri(): string {
+        var absUri = parent.document.URL;
+        var parts = Utils.Urls.GetUrlParts(absUri);
+        var relUri = parts.pathname + parts.search + parent.document.location.hash;
+
+        if (!relUri.startsWith("/")) {
+            relUri = "/" + relUri;
+        }
+
+        return relUri;
+    }
+
     // auth
 
     clickThrough(resource: Manifesto.IExternalResource): Promise<void> {
@@ -756,7 +783,7 @@ class BaseExtension implements IExtension {
 
     storeAccessToken(resource: Manifesto.IExternalResource, token: Manifesto.IAccessToken): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            Storage.set(resource.tokenService.id, token, token.expiresIn);
+            Utils.Storage.set(resource.tokenService.id, token, token.expiresIn);
             resolve();
         });
     }
@@ -768,7 +795,7 @@ class BaseExtension implements IExtension {
             var foundToken: Manifesto.IAccessToken;
 
             // first try an exact match of the url
-            var item: StorageItem = Storage.get(resource.dataUri);
+            var item: storage.StorageItem = Utils.Storage.get(resource.dataUri);
 
             if (item){
                 foundToken = item.value;
@@ -776,7 +803,7 @@ class BaseExtension implements IExtension {
                 // find an access token for the domain
                 var domain = Utils.Urls.GetUrlParts(resource.dataUri).hostname;
 
-                var items: StorageItem[] = Storage.getItems();
+                var items: storage.StorageItem[] = Utils.Storage.getItems();
 
                 for(var i = 0; i < items.length; i++) {
                     item = items[i];

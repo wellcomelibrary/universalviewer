@@ -1,11 +1,13 @@
 import BaseCommands = require("../../modules/uv-shared-module/BaseCommands");
 import BaseExtension = require("../../modules/uv-shared-module/BaseExtension");
 import BaseProvider = require("../../modules/uv-shared-module/BaseProvider");
+import Bookmark = require("../../modules/uv-shared-module/Bookmark");
 import BootStrapper = require("../../Bootstrapper");
 import Commands = require("./Commands");
 import DownloadDialogue = require("./DownloadDialogue");
 import EmbedDialogue = require("./EmbedDialogue");
 import ExternalContentDialogue = require("../../modules/uv-dialogues-module/ExternalContentDialogue");
+import ExternalResource = require("../../modules/uv-shared-module/ExternalResource");
 import FooterPanel = require("../../modules/uv-searchfooterpanel-module/FooterPanel");
 import GalleryView = require("../../modules/uv-treeviewleftpanel-module/GalleryView");
 import HelpDialogue = require("../../modules/uv-dialogues-module/HelpDialogue");
@@ -16,7 +18,6 @@ import Mode = require("./Mode");
 import MoreInfoRightPanel = require("../../modules/uv-moreinforightpanel-module/MoreInfoRightPanel");
 import PagingHeaderPanel = require("../../modules/uv-pagingheaderpanel-module/PagingHeaderPanel");
 import Params = require("../../Params");
-import ExternalResource = require("../../modules/uv-shared-module/ExternalResource");
 import RightPanel = require("../../modules/uv-shared-module/RightPanel");
 import SeadragonCenterPanel = require("../../modules/uv-seadragoncenterpanel-module/SeadragonCenterPanel");
 import Settings = require("../../modules/uv-shared-module/Settings");
@@ -109,6 +110,14 @@ class Extension extends BaseExtension {
 
         $.subscribe(BaseCommands.PAGE_DOWN, (e) => {
             this.viewPage(this.provider.getNextPageIndex());
+        });
+
+        $.subscribe(BaseCommands.PLUS, (e) => {
+            this.centerPanel.setFocus();
+        });
+
+        $.subscribe(BaseCommands.MINUS, (e) => {
+            this.centerPanel.setFocus();
         });
 
         $.subscribe(BaseCommands.UP_ARROW, (e) => {
@@ -377,7 +386,7 @@ class Extension extends BaseExtension {
         }
     }
 
-    searchWithin(terms) {
+    searchWithin(terms): void {
 
         var that = this;
 
@@ -395,14 +404,14 @@ class Extension extends BaseExtension {
         });
     }
 
-    clearSearch() {
+    clearSearch(): void {
         (<ISeadragonProvider>this.provider).searchResults = [];
 
         // reload current index as it may contain results.
         this.viewPage(this.provider.canvasIndex);
     }
 
-    prevSearchResult() {
+    prevSearchResult(): void {
 
         // get the first result with a canvasIndex less than the current index.
         for (var i = (<ISeadragonProvider>this.provider).searchResults.length - 1; i >= 0; i--) {
@@ -415,7 +424,7 @@ class Extension extends BaseExtension {
         }
     }
 
-    nextSearchResult() {
+    nextSearchResult(): void {
 
         // get the first result with an index greater than the current index.
         for (var i = 0; i < (<ISeadragonProvider>this.provider).searchResults.length; i++) {
@@ -426,6 +435,22 @@ class Extension extends BaseExtension {
                 break;
             }
         }
+    }
+
+    bookmark(): void {
+        super.bookmark();
+
+        var canvas: Manifesto.ICanvas = this.provider.getCurrentCanvas();
+        var bookmark: Bookmark = new Bookmark();
+
+        bookmark.index = this.provider.canvasIndex;
+        bookmark.label = canvas.getLabel();
+        bookmark.path = (<ISeadragonProvider>this.provider).getCroppedImageUri(canvas, this.getViewer(), true);
+        bookmark.thumb = canvas.getThumbUri(this.provider.config.options.bookmarkThumbWidth, this.provider.config.options.bookmarkThumbHeight);
+        bookmark.title = this.provider.getTitle();
+        bookmark.type = manifesto.ElementType.image().toString();
+
+        this.triggerSocket(BaseCommands.BOOKMARK, bookmark);
     }
 }
 
