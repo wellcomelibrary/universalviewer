@@ -1,6 +1,6 @@
 {
   "name": "Universal Viewer",
-  "version": "1.5.32",
+  "version": "1.6.6",
   "description": "The Universal Viewer is an open source project to enable cultural heritage institutions to present their digital artifacts in an IIIF-compliant and highly customisable user interface.",
   "repository": {
     "type": "git",
@@ -20,9 +20,8 @@
     "es6-promise": "~2.2.0",
     "extensions": "edsilv/extensions#~0.1.5",
     "http-status-codes": "edsilv/http-status-codes#~0.0.2",
-    "jquery-plugins": "edsilv/jquery-plugins#~0.0.14",
+    "jquery-plugins": "edsilv/jquery-plugins#~0.0.16",
     "lodash-compat": "~3.10.0",
-    "manifesto": "universalviewer/manifesto#dev",
     "r.js": "~2.1.18",
     "utils": "edsilv/utils#~0.0.28",
     "uv-cy-GB-theme": "wellcomelibrary/uv-cy-GB-theme",

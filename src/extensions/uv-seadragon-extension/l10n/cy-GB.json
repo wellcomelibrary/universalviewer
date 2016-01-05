@@ -38,8 +38,8 @@
       "content": {
         "customSize": "Maint ddewisol",
         "height": "Hyd",
-        "instructions": "Er mwyn ymgorffori'r eitem hon ar eich gwefan, copïwch a gosodwch y cod isod:",
-        "title": "Ymgorffori",
+        "instructions": "Er mwyn ymgorffori'r eitem hon ar eich gwefan, copïwch a gosodwch y cod isod.",
+        "title": "Rhannu",
         "width": "Lled"
       }
     },
@@ -49,7 +49,8 @@
         "download": "Lawrlwytho",
         "embed": "Ymgorffori",
         "exitFullScreen": "Dianc o'r sgrin lawn",
-        "fullScreen": "Sgrin lawn"
+        "fullScreen": "Sgrin lawn",
+        "open": "agored"
       }
     },
     "genericDialogue": {
@@ -86,7 +87,7 @@
         "license": "trwydded",
         "more": "mwy",
         "noData": "Nid oes data i'w arddangos",
-        "title": "Mwy o Wybodaeth"
+        "title": "gwybodaeth"
       }
     },
     "pagingHeaderPanel": {
@@ -150,6 +151,7 @@
     "settingsDialogue": {
       "content": {
         "locale": "Iaith",
+        "navigatorEnabled": "Navigator Galluogwyd",
         "pagingEnabled": "Arddangos dwy dudalen",
         "preserveViewport": "Cadw'r lefel o glosio",
         "title": "Dewisiadau",

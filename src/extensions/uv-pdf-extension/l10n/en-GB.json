@@ -25,8 +25,8 @@
       "content": {
         "customSize": "Custom Size",
         "height": "Height",
-        "instructions": "To embed this item in your own website, copy and paste the code below:",
-        "title": "Embed",
+        "instructions": "To embed this item in your own website, copy and paste the code below.",
+        "title": "Share",
         "width": "Width"
       }
     },
@@ -36,7 +36,8 @@
         "download": "Download",
         "embed": "Embed",
         "exitFullScreen": "Exit Full Screen",
-        "fullScreen": "Full Screen"
+        "fullScreen": "Full Screen",
+        "open": "Open"
       }
     },
     "genericDialogue": {
@@ -64,17 +65,17 @@
     "moreInfoRightPanel": {
       "content": {
         "attribution": "Attribution",
-        "collapse": "Collapse More Information",
+        "collapse": "Collapse Information",
         "collapseFull": "Collapse Gallery",
         "description": "Description",
-        "expand": "Expand More Information",
+        "expand": "Expand Information",
         "expandFull": "Expand Gallery",
         "holdingText": "Your module goes here!",
         "less": "less",
         "license": "License",
         "more": "more",
         "noData": "No data to display",
-        "title": "More Information"
+        "title": "Information"
       }
     },
     "pdfCenterPanel": {
@@ -87,7 +88,8 @@
         "locale": "Locale",
         "pagingEnabled": "Two Page View",
         "preserveViewport": "Preserve Zoom",
-        "title": "Settings"
+        "title": "Settings",
+        "website": "<a href='https://github.com/universalviewer/universalviewer'>more info</a>"
       }
     },
     "treeViewLeftPanel": {
