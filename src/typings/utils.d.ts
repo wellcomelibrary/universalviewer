@@ -1,4 +1,9 @@
 declare module Utils {
+    class Async {
+        static WaitFor(test: () => boolean, successCallback: () => void, failureCallback?: () => void, interval?: number, maxTries?: number, numTries?: number): void;
+    }
+}
+declare module Utils {
     class Bools {
         static GetBool(val: any, defaultVal: boolean): boolean;
     }
@@ -1412,11 +1417,17 @@ declare module Utils {
 declare module Utils {
     class Documents {
         static IsInIFrame(): boolean;
+        static SupportsFullscreen(): boolean;
     }
 }
 declare module Utils {
     class Events {
         static Debounce(fn: any, debounceDuration: number): () => any;
+    }
+}
+declare module Utils {
+    class Keyboard {
+        static GetCharCode(e: KeyboardEvent): number;
     }
 }
 declare module Utils.Maths {
