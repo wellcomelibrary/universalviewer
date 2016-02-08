@@ -12678,7 +12678,7 @@ var objectKeys = Object.keys || function (obj) {
 };
 
 },{}],15:[function(_dereq_,module,exports){
-'use strict';
+
 
 exports.decode = exports.parse = _dereq_('./decode');
 exports.encode = exports.stringify = _dereq_('./encode');
