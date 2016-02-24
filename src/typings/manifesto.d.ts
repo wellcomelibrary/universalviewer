@@ -99,16 +99,22 @@ declare module Manifesto {
     class ServiceProfile extends StringValue {
         static AUTOCOMPLETE: ServiceProfile;
         static CLICKTHROUGH: ServiceProfile;
+        static STANFORDIIIFIMAGECOMPLIANCE0: ServiceProfile;
         static STANFORDIIIFIMAGECOMPLIANCE1: ServiceProfile;
         static STANFORDIIIFIMAGECOMPLIANCE2: ServiceProfile;
+        static STANFORDIIIFIMAGECONFORMANCE0: ServiceProfile;
         static STANFORDIIIFIMAGECONFORMANCE1: ServiceProfile;
         static STANFORDIIIFIMAGECONFORMANCE2: ServiceProfile;
+        static STANFORDIIIF1IMAGECOMPLIANCE0: ServiceProfile;
         static STANFORDIIIF1IMAGECOMPLIANCE1: ServiceProfile;
         static STANFORDIIIF1IMAGECOMPLIANCE2: ServiceProfile;
+        static STANFORDIIIF1IMAGECONFORMANCE0: ServiceProfile;
         static STANFORDIIIF1IMAGECONFORMANCE1: ServiceProfile;
         static STANFORDIIIF1IMAGECONFORMANCE2: ServiceProfile;
+        static IIIF1IMAGELEVEL0: ServiceProfile;
         static IIIF1IMAGELEVEL1: ServiceProfile;
         static IIIF1IMAGELEVEL2: ServiceProfile;
+        static IIIF2IMAGELEVEL0: ServiceProfile;
         static IIIF2IMAGELEVEL1: ServiceProfile;
         static IIIF2IMAGELEVEL2: ServiceProfile;
         static IXIF: ServiceProfile;
@@ -194,6 +200,7 @@ declare var _endsWith: any;
 declare var _last: any;
 declare module Manifesto {
     class Canvas extends ManifestResource implements ICanvas {
+        index: number;
         ranges: IRange[];
         constructor(jsonld: any, options: IManifestoOptions);
         getImages(): IAnnotation[];
@@ -216,9 +223,9 @@ declare module Manifesto {
         index: number;
         isLoaded: boolean;
         parentCollection: ICollection;
-        treeRoot: TreeNode;
+        treeRoot: ITreeNode;
         constructor(jsonld: any, options?: IManifestoOptions);
-        generateTreeNodeIds(treeNode: TreeNode, index?: number): void;
+        generateTreeNodeIds(treeNode: ITreeNode, index?: number): void;
         getAttribution(): string;
         getDescription(): string;
         getIIIFResourceType(): IIIFResourceType;
@@ -227,7 +234,7 @@ declare module Manifesto {
         getNavDate(): Date;
         getSeeAlso(): any;
         getTitle(): string;
-        getTree(): TreeNode;
+        getTree(): ITreeNode;
         load(): Promise<IIIIFResource>;
     }
 }
@@ -237,7 +244,8 @@ declare module Manifesto {
     class Manifest extends IIIFResource implements IManifest {
         index: number;
         rootRange: IRange;
-        private sequences;
+        private _ranges;
+        private _sequences;
         constructor(jsonld: any, options?: IManifestoOptions);
         private _getRootRange();
         private _getRangeById(id);
@@ -248,11 +256,12 @@ declare module Manifesto {
         getSequences(): ISequence[];
         getSequenceByIndex(sequenceIndex: number): ISequence;
         getTotalSequences(): number;
-        getTree(): TreeNode;
+        getTree(): ITreeNode;
         private _parseTreeNode(node, range);
         getManifestType(): ManifestType;
         isMultiSequence(): boolean;
         getViewingDirection(): ViewingDirection;
+        getViewingHint(): ViewingHint;
     }
 }
 declare module Manifesto {
@@ -264,19 +273,20 @@ declare module Manifesto {
         getManifestByIndex(manifestIndex: number): Promise<IManifest>;
         getTotalCollections(): number;
         getTotalManifests(): number;
-        getTree(): TreeNode;
+        getTree(): ITreeNode;
         private _parseManifests(parentCollection);
         private _parseCollections(parentCollection);
     }
 }
 declare module Manifesto {
     class Range extends ManifestResource implements IRange {
+        canvases: ICanvas[];
         parentRange: Range;
         path: string;
         ranges: Range[];
-        treeNode: TreeNode;
+        treeNode: ITreeNode;
         constructor(jsonld: any, options: IManifestoOptions);
-        getCanvases(): string[];
+        getCanvasIds(): string[];
         getViewingDirection(): ViewingDirection;
         getViewingHint(): ViewingHint;
     }
@@ -303,7 +313,7 @@ declare module Manifesto {
         getPagedIndices(canvasIndex: number, pagingEnabled?: boolean): number[];
         getPrevPageIndex(canvasIndex: number, pagingEnabled?: boolean): number;
         getStartCanvasIndex(): number;
-        getThumbs(width: number, height?: number): Manifesto.Thumb[];
+        getThumbs(width: number, height?: number): Manifesto.IThumb[];
         getStartCanvas(): string;
         getTotalCanvases(): number;
         getViewingDirection(): ViewingDirection;
@@ -341,28 +351,59 @@ declare module Manifesto {
     }
 }
 declare module Manifesto {
-    class Thumb {
+    interface IThumb {
+        data: any;
+        height: number;
+        index: number;
+        label: string;
+        uri: string;
+        visible: boolean;
+        width: number;
+    }
+}
+declare module Manifesto {
+    class Thumb implements IThumb {
+        data: any;
         index: number;
         uri: string;
         label: string;
         width: number;
         height: number;
         visible: boolean;
-        constructor(index: number, uri: string, label: string, width: number, height: number, visible: boolean);
+        constructor(width: number, canvas: ICanvas);
     }
 }
 declare module Manifesto {
-    class TreeNode {
-        label: string;
+    interface ITreeNode {
         data: any;
-        nodes: TreeNode[];
+        nodes: ITreeNode[];
         selected: boolean;
         expanded: boolean;
         id: string;
+        label: string;
         navDate: Date;
-        parentNode: TreeNode;
+        parentNode: ITreeNode;
+        addNode(node: ITreeNode): void;
+        isCollection(): boolean;
+        isManifest(): boolean;
+        isRange(): boolean;
+    }
+}
+declare module Manifesto {
+    class TreeNode implements ITreeNode {
+        data: any;
+        nodes: ITreeNode[];
+        selected: boolean;
+        expanded: boolean;
+        id: string;
+        label: string;
+        navDate: Date;
+        parentNode: ITreeNode;
         constructor(label?: string, data?: any);
-        addNode(node: TreeNode): void;
+        addNode(node: ITreeNode): void;
+        isCollection(): boolean;
+        isManifest(): boolean;
+        isRange(): boolean;
     }
 }
 declare module Manifesto {
@@ -381,9 +422,12 @@ declare module Manifesto {
     class Utils {
         static getLocalisedValue(resource: any, locale: string): string;
         static loadResource(uri: string): Promise<string>;
-        static loadExternalResource(resource: IExternalResource, clickThrough: (resource: IExternalResource) => Promise<void>, login: (resource: IExternalResource) => Promise<void>, getAccessToken: (resource: IExternalResource) => Promise<IAccessToken>, storeAccessToken: (resource: IExternalResource, token: IAccessToken) => Promise<void>, getStoredAccessToken: (resource: IExternalResource) => Promise<IAccessToken>, handleResourceResponse: (resource: IExternalResource) => Promise<any>, options?: IManifestoOptions): Promise<IExternalResource>;
-        static loadExternalResources(resources: IExternalResource[], clickThrough: (resource: IExternalResource) => Promise<void>, login: (resource: IExternalResource) => Promise<void>, getAccessToken: (resource: IExternalResource) => Promise<IAccessToken>, storeAccessToken: (resource: IExternalResource, token: IAccessToken) => Promise<void>, getStoredAccessToken: (resource: IExternalResource) => Promise<IAccessToken>, handleResourceResponse: (resource: IExternalResource) => Promise<any>, options?: IManifestoOptions): Promise<IExternalResource[]>;
-        static authorize(resource: IExternalResource, clickThrough: (resource: IExternalResource) => Promise<void>, login: (resource: IExternalResource) => Promise<void>, getAccessToken: (resource: IExternalResource) => Promise<IAccessToken>, storeAccessToken: (resource: IExternalResource, token: IAccessToken) => Promise<void>, getStoredAccessToken: (resource: IExternalResource) => Promise<IAccessToken>): Promise<IExternalResource>;
+        static loadExternalResource(resource: IExternalResource, tokenStorageStrategy: string, clickThrough: (resource: IExternalResource) => Promise<void>, login: (resource: IExternalResource) => Promise<void>, getAccessToken: (resource: IExternalResource) => Promise<IAccessToken>, storeAccessToken: (resource: IExternalResource, token: IAccessToken, tokenStorageStrategy: string) => Promise<void>, getStoredAccessToken: (resource: IExternalResource, tokenStorageStrategy: string) => Promise<IAccessToken>, handleResourceResponse: (resource: IExternalResource) => Promise<any>, options?: IManifestoOptions): Promise<IExternalResource>;
+        static createError(name: string, message: string): Error;
+        static createAuthorizationFailedError(): Error;
+        static createInternalServerError(message: string): Error;
+        static loadExternalResources(resources: IExternalResource[], tokenStorageStrategy: string, clickThrough: (resource: IExternalResource) => Promise<void>, login: (resource: IExternalResource) => Promise<void>, getAccessToken: (resource: IExternalResource) => Promise<IAccessToken>, storeAccessToken: (resource: IExternalResource, token: IAccessToken, tokenStorageStrategy: string) => Promise<void>, getStoredAccessToken: (resource: IExternalResource, tokenStorageStrategy: string) => Promise<IAccessToken>, handleResourceResponse: (resource: IExternalResource) => Promise<any>, options?: IManifestoOptions): Promise<IExternalResource[]>;
+        static authorize(resource: IExternalResource, tokenStorageStrategy: string, clickThrough: (resource: IExternalResource) => Promise<void>, login: (resource: IExternalResource) => Promise<void>, getAccessToken: (resource: IExternalResource) => Promise<IAccessToken>, storeAccessToken: (resource: IExternalResource, token: IAccessToken, tokenStorageStrategy: string) => Promise<void>, getStoredAccessToken: (resource: IExternalResource, tokenStorageStrategy: string) => Promise<IAccessToken>): Promise<IExternalResource>;
         static getService(resource: any, profile: ServiceProfile | string): IService;
         static getServiceByReference(resource: any, id: string): any;
         static getServices(resource: any): IService[];
@@ -415,6 +459,8 @@ declare module Manifesto {
 }
 declare module Manifesto {
     interface ICanvas extends IManifestResource {
+        index: number;
+        ranges: IRange[];
         getHeight(): number;
         getImages(): IAnnotation[];
         getThumbUri(width: number, height: number): string;
@@ -429,7 +475,7 @@ declare module Manifesto {
         getManifestByIndex(index: number): Promise<IManifest>;
         getTotalCollections(): number;
         getTotalManifests(): number;
-        getTree(): TreeNode;
+        getTree(): ITreeNode;
         manifests: IManifest[];
     }
 }
@@ -463,12 +509,12 @@ declare module Manifesto {
         getNavDate(): Date;
         getSeeAlso(): any;
         getTitle(): string;
-        getTree(): TreeNode;
+        getTree(): ITreeNode;
         index: number;
         isLoaded: boolean;
         load(): Promise<IIIIFResource>;
         parentCollection: ICollection;
-        treeRoot: TreeNode;
+        treeRoot: ITreeNode;
     }
 }
 declare module Manifesto {
@@ -487,9 +533,10 @@ declare module Manifesto {
         getSequences(): ISequence[];
         getSequenceByIndex(index: number): ISequence;
         getTotalSequences(): number;
-        getTree(): TreeNode;
+        getTree(): ITreeNode;
         getManifestType(): ManifestType;
         getViewingDirection(): Manifesto.ViewingDirection;
+        getViewingHint(): ViewingHint;
         isMultiSequence(): boolean;
         rootRange: IRange;
     }
@@ -512,10 +559,13 @@ interface IManifesto {
     ElementType: Manifesto.ElementType;
     getRenderings(resource: any): Manifesto.IRendering[];
     getService: (resource: any, profile: Manifesto.ServiceProfile | string) => Manifesto.IService;
-    getTreeNode(): Manifesto.TreeNode;
+    getTreeNode(): Manifesto.ITreeNode;
     IIIFResourceType: Manifesto.IIIFResourceType;
     isImageProfile(profile: Manifesto.ServiceProfile): boolean;
-    loadExternalResources: (resources: Manifesto.IExternalResource[], clickThrough: (resource: Manifesto.IExternalResource) => Promise<void>, login: (resource: Manifesto.IExternalResource) => Promise<void>, getAccessToken: (resource: Manifesto.IExternalResource) => Promise<Manifesto.IAccessToken>, storeAccessToken: (resource: Manifesto.IExternalResource, token: Manifesto.IAccessToken) => Promise<void>, getStoredAccessToken: (resource: Manifesto.IExternalResource) => Promise<Manifesto.IAccessToken>, handleResourceResponse: (resource: Manifesto.IExternalResource) => Promise<any>, options?: Manifesto.IManifestoOptions) => Promise<Manifesto.IExternalResource[]>;
+    isLevel0ImageProfile(profile: Manifesto.ServiceProfile): boolean;
+    isLevel1ImageProfile(profile: Manifesto.ServiceProfile): boolean;
+    isLevel2ImageProfile(profile: Manifesto.ServiceProfile): boolean;
+    loadExternalResources: (resources: Manifesto.IExternalResource[], tokenStorageStrategy: string, clickThrough: (resource: Manifesto.IExternalResource) => Promise<void>, login: (resource: Manifesto.IExternalResource) => Promise<void>, getAccessToken: (resource: Manifesto.IExternalResource) => Promise<Manifesto.IAccessToken>, storeAccessToken: (resource: Manifesto.IExternalResource, token: Manifesto.IAccessToken, tokenStorageStrategy: string) => Promise<void>, getStoredAccessToken: (resource: Manifesto.IExternalResource, tokenStorageStrategy: string) => Promise<Manifesto.IAccessToken>, handleResourceResponse: (resource: Manifesto.IExternalResource) => Promise<any>, options?: Manifesto.IManifestoOptions) => Promise<Manifesto.IExternalResource[]>;
     loadManifest: (uri: string) => Promise<string>;
     ManifestType: Manifesto.ManifestType;
     RenderingFormat: Manifesto.RenderingFormat;
@@ -537,13 +587,13 @@ declare module Manifesto {
 }
 declare module Manifesto {
     interface IRange extends IManifestResource {
-        getCanvases(): string[];
+        getCanvasIds(): string[];
         getViewingDirection(): ViewingDirection;
         getViewingHint(): ViewingHint;
         parentRange: IRange;
         path: string;
         ranges: IRange[];
-        treeNode: TreeNode;
+        treeNode: ITreeNode;
     }
 }
 declare module Manifesto {
@@ -573,7 +623,7 @@ declare module Manifesto {
         getRendering(format: RenderingFormat | string): IRendering;
         getStartCanvas(): string;
         getStartCanvasIndex(): number;
-        getThumbs(width: number, height: number): Manifesto.Thumb[];
+        getThumbs(width: number, height: number): Manifesto.IThumb[];
         getTotalCanvases(): number;
         getViewingDirection(): Manifesto.ViewingDirection;
         getViewingHint(): Manifesto.ViewingHint;
@@ -598,5 +648,7 @@ declare module Manifesto {
         getType(): ResourceType;
         getWidth(): number;
         getHeight(): number;
+        getMaxWidth(): number;
+        getMaxHeight(): number;
     }
 }

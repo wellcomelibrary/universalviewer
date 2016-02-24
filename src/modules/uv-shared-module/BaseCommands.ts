@@ -2,6 +2,7 @@ class Commands {
     static namespace: string = 'uv.';
 
     static ACCEPT_TERMS: string                     = Commands.namespace + 'onAcceptTerms';
+    static AUTHORIZATION_FAILED: string             = Commands.namespace + 'onAuthorizationFailed';
     static AUTHORIZATION_OCCURRED: string           = Commands.namespace + 'onAuthorizationOccurred';
     static BOOKMARK: string                         = Commands.namespace + 'onBookmark';
     static CANVAS_INDEX_CHANGE_FAILED: string       = Commands.namespace + 'onCanvasIndexChangeFailed';
@@ -17,6 +18,7 @@ class Commands {
     static END: string                              = Commands.namespace + 'onEnd';
     static ESCAPE: string                           = Commands.namespace + 'onEscape';
     static EXTERNAL_LINK_CLICKED: string            = Commands.namespace + 'onExternalLinkClicked';
+    static FEEDBACK: string                         = Commands.namespace + 'onFeedback';
     static PARENT_EXIT_FULLSCREEN: string           = Commands.namespace + 'onParentExitFullScreen';
     static HIDE_CLICKTHROUGH_DIALOGUE: string       = Commands.namespace + 'onHideClickthroughDialogue';
     static HIDE_DOWNLOAD_DIALOGUE: string           = Commands.namespace + 'onHideDownloadDialogue';

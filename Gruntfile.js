@@ -219,13 +219,11 @@ module.exports = function (grunt) {
                         src: [
                             'es6-promise/promise.min.js',
                             'exjs/dist/ex.es3.min.js',
-                            'exjs/dist/ex.es3.min.js.map',
                             'extensions/dist/extensions.js',
                             'http-status-codes/dist/http-status-codes.js',
                             'jquery-plugins/dist/jquery-plugins.js',
                             'key-codes/dist/key-codes.js',
                             'lodash-compat/lodash.min.js',
-                            'manifesto/dist/client/manifesto.js',
                             'Units/Length.min.js',
                             'utils/dist/utils.js'
                         ],

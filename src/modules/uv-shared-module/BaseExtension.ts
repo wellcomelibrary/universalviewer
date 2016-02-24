@@ -13,6 +13,9 @@ import IProvider = require("./IProvider");
 import LoginDialogue = require("../../modules/uv-dialogues-module/LoginDialogue");
 import Params = require("../../Params");
 import Shell = require("./Shell");
+import IAccessToken = Manifesto.IAccessToken;
+import ILoginDialogueOptions = require("./ILoginDialogueOptions");
+import LoginWarningMessages = require("./LoginWarningMessages");
 
 class BaseExtension implements IExtension {
 
@@ -167,6 +170,11 @@ class BaseExtension implements IExtension {
             this.triggerSocket(BaseCommands.ACCEPT_TERMS);
         });
 
+        $.subscribe(BaseCommands.AUTHORIZATION_FAILED, () => {
+            this.triggerSocket(BaseCommands.AUTHORIZATION_FAILED);
+            this.showMessage(this.provider.config.content.authorisationFailedMessage);
+        });
+
         $.subscribe(BaseCommands.AUTHORIZATION_OCCURRED, () => {
             this.triggerSocket(BaseCommands.AUTHORIZATION_OCCURRED);
         });
@@ -223,6 +231,10 @@ class BaseExtension implements IExtension {
             if (this.isFullScreen() && !this.isOverlayActive()) {
                 $.publish(BaseCommands.TOGGLE_FULLSCREEN);
             }
+        });
+
+        $.subscribe(BaseCommands.FEEDBACK, () => {
+            this.feedback();
         });
 
         $.subscribe(BaseCommands.HIDE_DOWNLOAD_DIALOGUE, () => {
@@ -617,9 +629,12 @@ class BaseExtension implements IExtension {
             }
         });
 
+        var storageStrategy: string = this.provider.config.options.tokenStorage;
+
         return new Promise<Manifesto.IExternalResource[]>((resolve) => {
             manifesto.loadExternalResources(
                 resourcesToLoad,
+                storageStrategy,
                 this.clickThrough,
                 this.login,
                 this.getAccessToken,
@@ -630,8 +645,13 @@ class BaseExtension implements IExtension {
                         return <Manifesto.IExternalResource>_.toPlainObject(resource.data);
                     });
                     resolve(this.provider.resources);
-                })['catch']((errorMessage) => {
-                this.showMessage(errorMessage);
+                })['catch']((error: any) => {
+                    if (error.name === HTTPStatusCode.SERVICE_UNAVAILABLE.toString()) {
+                        // show friendly error
+                        $.publish(BaseCommands.AUTHORIZATION_FAILED);
+                    } else {
+                        this.showMessage(error.message || error);
+                    }
             });
         });
     }
@@ -711,16 +731,34 @@ class BaseExtension implements IExtension {
         this.provider.reload(p);
     }
 
+    viewCollection(collection: Manifesto.ICollection): void{
+        var p = new BootstrapParams();
+        p.manifestUri = this.provider.manifestUri;
+        p.collectionIndex = collection.index;
+        p.manifestIndex = 0;
+        p.sequenceIndex = 0;
+        p.canvasIndex = 0;
+
+        this.provider.reload(p);
+    }
+
     isFullScreen(): boolean {
         return this.bootstrapper.isFullScreen;
     }
 
-    isLeftPanelEnabled(): boolean{
-        return  Utils.Bools.GetBool(this.provider.config.options.leftPanelEnabled, true)
-            && this.provider.isMultiCanvas();
+    isLeftPanelEnabled(): boolean {
+        if (Utils.Bools.GetBool(this.provider.config.options.leftPanelEnabled, true)){
+            if (this.provider.isMultiCanvas()){
+                if (this.provider.getViewingHint().toString() !== manifesto.ViewingHint.continuous().toString()){
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
-    isRightPanelEnabled(): boolean{
+    isRightPanelEnabled(): boolean {
         return  Utils.Bools.GetBool(this.provider.config.options.rightPanelEnabled, true);
     }
 
@@ -730,6 +768,10 @@ class BaseExtension implements IExtension {
 
     bookmark(): void {
         // override for each extension
+    }
+
+    feedback(): void {
+        this.triggerSocket(BaseCommands.FEEDBACK, new BootstrapParams());
     }
 
     getBookmarkUri(): string {
@@ -769,6 +811,13 @@ class BaseExtension implements IExtension {
     login(resource: Manifesto.IExternalResource): Promise<void> {
         return new Promise<void>((resolve) => {
 
+            var options: ILoginDialogueOptions = <ILoginDialogueOptions>{};
+
+            if (resource.status === HTTPStatusCode.FORBIDDEN){
+                options.warningMessage = LoginWarningMessages.FORBIDDEN;
+                options.showCancelButton = true;
+            }
+
             $.publish(BaseCommands.SHOW_LOGIN_DIALOGUE, [{
                 resource: resource,
                 acceptCallback: () => {
@@ -780,7 +829,8 @@ class BaseExtension implements IExtension {
                             resolve();
                         }
                     }, 500);
-                }
+                },
+                options: options
             }]);
         });
     }
@@ -799,37 +849,48 @@ class BaseExtension implements IExtension {
         });
     }
 
-    storeAccessToken(resource: Manifesto.IExternalResource, token: Manifesto.IAccessToken): Promise<void> {
+    storeAccessToken(resource: Manifesto.IExternalResource, token: Manifesto.IAccessToken, storageStrategy: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            Utils.Storage.set(resource.tokenService.id, token, token.expiresIn);
+            Utils.Storage.set(resource.tokenService.id, token, token.expiresIn, new Utils.StorageType(storageStrategy));
             resolve();
         });
     }
 
-    getStoredAccessToken(resource: Manifesto.IExternalResource): Promise<Manifesto.IAccessToken> {
+    getStoredAccessToken(resource: Manifesto.IExternalResource, storageStrategy: string): Promise<Manifesto.IAccessToken> {
 
         return new Promise<Manifesto.IAccessToken>((resolve, reject) => {
 
-            var foundToken: Manifesto.IAccessToken;
+            var foundItems: storage.StorageItem[] = [];
 
             // first try an exact match of the url
-            var item: storage.StorageItem = Utils.Storage.get(resource.dataUri);
+            var item: storage.StorageItem = Utils.Storage.get(resource.dataUri, new Utils.StorageType(storageStrategy));
 
             if (item){
-                foundToken = item.value;
+                foundItems.push(item);
             } else {
                 // find an access token for the domain
                 var domain = Utils.Urls.GetUrlParts(resource.dataUri).hostname;
 
-                var items: storage.StorageItem[] = Utils.Storage.getItems();
+                var items: storage.StorageItem[] = Utils.Storage.getItems(new Utils.StorageType(storageStrategy));
 
                 for(var i = 0; i < items.length; i++) {
                     item = items[i];
 
                     if(item.key.contains(domain)) {
-                        foundToken = item.value;
+                        foundItems.push(item);
                     }
                 }
+            }
+
+            // sort by expiresAt
+            foundItems = _.sortBy(foundItems, (item: storage.StorageItem) => {
+                return item.expiresAt;
+            });
+
+            var foundToken: IAccessToken;
+
+            if (foundItems.length){
+                foundToken = <Manifesto.IAccessToken>foundItems.last().value
             }
 
             resolve(foundToken);
@@ -847,6 +908,7 @@ class BaseExtension implements IExtension {
                 resolve(resource);
                 $.publish(BaseCommands.RESOURCE_DEGRADED, [resource]);
             } else {
+
                 if (resource.error.status === HTTPStatusCode.UNAUTHORIZED ||
                     resource.error.status === HTTPStatusCode.INTERNAL_SERVER_ERROR){
                     // if the browser doesn't support CORS
