@@ -145,7 +145,7 @@
   padding: 0;
 }
 #app .overlay.download .middle ol.options li.group {
-  border-bottom: 1px solid #efefef;
+  border-bottom: 1px solid #ffffff;
 }
 #app .overlay.download .middle ol.options li.group:last-child {
   border-bottom: none;
@@ -509,8 +509,8 @@
   background: none;
 }
 #app .leftPanel .views .galleryView .main .thumbs .thumb .wrap.multiSelected {
-  border: 2px solid #14a4c3;
-  background: #14a4c3;
+  border: 2px solid #408294;
+  background: #408294;
 }
 #app .leftPanel .views .galleryView .main .thumbs .thumb .wrap.multiSelected .thumbImage {
   opacity: 0.35;
