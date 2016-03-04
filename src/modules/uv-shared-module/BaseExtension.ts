@@ -3,6 +3,7 @@ import BaseProvider = require("./BaseProvider");
 import BootStrapper = require("../../Bootstrapper");
 import BootstrapParams = require("../../BootstrapParams");
 import ClickThroughDialogue = require("../../modules/uv-dialogues-module/ClickThroughDialogue");
+import RestrictedDialogue = require("../../modules/uv-dialogues-module/RestrictedDialogue");
 import ExternalResource = require("./ExternalResource");
 import IExtension = require("./IExtension");
 import Information = require("./Information");
@@ -20,11 +21,13 @@ import LoginWarningMessages = require("./LoginWarningMessages");
 class BaseExtension implements IExtension {
 
     $clickThroughDialogue: JQuery;
+    $restrictedDialogue: JQuery;
     $element: JQuery;
     $loginDialogue: JQuery;
     bootstrapper: BootStrapper;
     canvasIndex: number;
     clickThroughDialogue: ClickThroughDialogue;
+    restrictedDialogue: RestrictedDialogue;
     embedHeight: number;
     embedWidth: number;
     extensions: any;
@@ -237,6 +240,11 @@ class BaseExtension implements IExtension {
             this.feedback();
         });
 
+        $.subscribe(BaseCommands.FORBIDDEN, () => {
+            this.triggerSocket(BaseCommands.FORBIDDEN);
+            $.publish(BaseCommands.OPEN_EXTERNAL_RESOURCE);
+        });
+
         $.subscribe(BaseCommands.HIDE_DOWNLOAD_DIALOGUE, () => {
             this.triggerSocket(BaseCommands.HIDE_DOWNLOAD_DIALOGUE);
         });
@@ -372,10 +380,6 @@ class BaseExtension implements IExtension {
             this.triggerSocket(BaseCommands.SETTINGS_CHANGED, args);
         });
 
-        $.subscribe(BaseCommands.SHOW_CLICKTHROUGH_DIALOGUE, () => {
-            this.triggerSocket(BaseCommands.SHOW_CLICKTHROUGH_DIALOGUE);
-        });
-
         $.subscribe(BaseCommands.SHOW_DOWNLOAD_DIALOGUE, () => {
             this.triggerSocket(BaseCommands.SHOW_DOWNLOAD_DIALOGUE);
         });
@@ -402,6 +406,14 @@ class BaseExtension implements IExtension {
 
         $.subscribe(BaseCommands.SHOW_LOGIN_DIALOGUE, () => {
             this.triggerSocket(BaseCommands.SHOW_LOGIN_DIALOGUE);
+        });
+
+        $.subscribe(BaseCommands.SHOW_CLICKTHROUGH_DIALOGUE, () => {
+            this.triggerSocket(BaseCommands.SHOW_CLICKTHROUGH_DIALOGUE);
+        });
+
+        $.subscribe(BaseCommands.SHOW_RESTRICTED_DIALOGUE, () => {
+            this.triggerSocket(BaseCommands.SHOW_RESTRICTED_DIALOGUE);
         });
 
         $.subscribe(BaseCommands.SHOW_OVERLAY, () => {
@@ -463,6 +475,10 @@ class BaseExtension implements IExtension {
         this.$clickThroughDialogue = $('<div class="overlay clickthrough"></div>');
         Shell.$overlays.append(this.$clickThroughDialogue);
         this.clickThroughDialogue = new ClickThroughDialogue(this.$clickThroughDialogue);
+
+        this.$restrictedDialogue = $('<div class="overlay login"></div>');
+        Shell.$overlays.append(this.$restrictedDialogue);
+        this.restrictedDialogue = new RestrictedDialogue(this.$restrictedDialogue);
 
         this.$loginDialogue = $('<div class="overlay login"></div>');
         Shell.$overlays.append(this.$loginDialogue);
@@ -636,6 +652,7 @@ class BaseExtension implements IExtension {
                 resourcesToLoad,
                 storageStrategy,
                 this.clickThrough,
+                this.restricted,
                 this.login,
                 this.getAccessToken,
                 this.storeAccessToken,
@@ -646,11 +663,18 @@ class BaseExtension implements IExtension {
                     });
                     resolve(this.provider.resources);
                 })['catch']((error: any) => {
-                    if (error.name === HTTPStatusCode.SERVICE_UNAVAILABLE.toString()) {
-                        // show friendly error
-                        $.publish(BaseCommands.AUTHORIZATION_FAILED);
-                    } else {
-                        this.showMessage(error.message || error);
+                    switch(error.name){
+                        case manifesto.StatusCodes.AUTHORIZATION_FAILED.toString():
+                            $.publish(BaseCommands.AUTHORIZATION_FAILED);
+                            break;
+                        case manifesto.StatusCodes.FORBIDDEN.toString():
+                            $.publish(BaseCommands.FORBIDDEN);
+                            break;
+                        case manifesto.StatusCodes.RESTRICTED.toString():
+                            // do nothing
+                            break;
+                        default:
+                            this.showMessage(error.message || error);
                     }
             });
         });
@@ -808,6 +832,19 @@ class BaseExtension implements IExtension {
         });
     }
 
+    restricted(resource: Manifesto.IExternalResource): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+
+            $.publish(BaseCommands.SHOW_RESTRICTED_DIALOGUE, [{
+                resource: resource,
+                acceptCallback: () => {
+                    $.publish(BaseCommands.LOAD_FAILED);
+                    reject(resource);
+                }
+            }]);
+        });
+    }
+
     login(resource: Manifesto.IExternalResource): Promise<void> {
         return new Promise<void>((resolve) => {
 
@@ -835,16 +872,24 @@ class BaseExtension implements IExtension {
         });
     }
 
-    getAccessToken(resource: Manifesto.IExternalResource): Promise<Manifesto.IAccessToken> {
+    getAccessToken(resource: Manifesto.IExternalResource, rejectOnError: boolean): Promise<Manifesto.IAccessToken> {
         return new Promise<Manifesto.IAccessToken>((resolve, reject) => {
             $.getJSON(resource.tokenService.id + "?callback=?", (token: Manifesto.IAccessToken) => {
                 if (token.error){
-                    reject(token.errorDescription);
+                    if(rejectOnError) {
+                        reject(token.errorDescription);
+                    } else {
+                        resolve(null);
+                    }
                 } else {
                     resolve(token);
                 }
             }).fail((error) => {
-                reject(error);
+                if(rejectOnError) {
+                    reject(error);
+                } else {
+                    resolve(null);
+                }
             });
         });
     }
@@ -862,8 +907,14 @@ class BaseExtension implements IExtension {
 
             var foundItems: storage.StorageItem[] = [];
 
+            var item: storage.StorageItem;
+            // try to match on the tokenService, if the resource has one:
+            if(resource.tokenService) {
+                item = Utils.Storage.get(resource.tokenService.id, new Utils.StorageType(storageStrategy));
+            }
+
             // first try an exact match of the url
-            var item: storage.StorageItem = Utils.Storage.get(resource.dataUri, new Utils.StorageType(storageStrategy));
+            //var item: storage.StorageItem = Utils.Storage.get(resource.dataUri, new Utils.StorageType(storageStrategy));
 
             if (item){
                 foundItems.push(item);
@@ -910,15 +961,20 @@ class BaseExtension implements IExtension {
             } else {
 
                 if (resource.error.status === HTTPStatusCode.UNAUTHORIZED ||
-                    resource.error.status === HTTPStatusCode.INTERNAL_SERVER_ERROR){
+                    resource.error.status === HTTPStatusCode.INTERNAL_SERVER_ERROR) {
                     // if the browser doesn't support CORS
-                    if (!Modernizr.cors){
-                        var informationArgs: InformationArgs = new InformationArgs(InformationType.AUTH_CORS_ERROR, null);
+                    if (!Modernizr.cors) {
+                        var informationArgs:InformationArgs = new InformationArgs(InformationType.AUTH_CORS_ERROR, null);
                         $.publish(BaseCommands.SHOW_INFORMATION, [informationArgs]);
                         resolve(resource);
                     } else {
                         reject(resource.error.statusText);
                     }
+                } else if (resource.error.status === HTTPStatusCode.FORBIDDEN){
+                    var error: Error = new Error();
+                    error.message = "Forbidden";
+                    error.name = manifesto.StatusCodes.FORBIDDEN.toString();
+                    reject(error);
                 } else {
                     reject(resource.error.statusText);
                 }

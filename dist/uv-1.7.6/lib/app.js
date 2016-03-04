@@ -2971,26 +2971,47 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-define('modules/uv-moreinforightpanel-module/MoreInfoRightPanel',["require", "exports", "../uv-shared-module/RightPanel"], function (require, exports, RightPanel) {
+define('modules/uv-moreinforightpanel-module/MoreInfoRightPanel',["require", "exports", "../uv-shared-module/BaseCommands", "../uv-shared-module/RightPanel"], function (require, exports, BaseCommands, RightPanel) {
     var MoreInfoRightPanel = (function (_super) {
         __extends(MoreInfoRightPanel, _super);
         function MoreInfoRightPanel($element) {
             _super.call(this, $element);
+            this.limitType = "lines";
+            this.limit = 4;
         }
         MoreInfoRightPanel.prototype.create = function () {
+            var _this = this;
             this.setConfig('moreInfoRightPanel');
             _super.prototype.create.call(this);
+            if (this.config.options.textLimitType) {
+                this.limitType = this.config.options.textLimitType;
+            }
+            if (this.limitType === "lines") {
+                this.limit = this.config.options.textLimit ? this.config.options.textLimit : 4;
+            }
+            else if (this.limitType === "chars") {
+                this.limit = this.config.options.textLimit ? this.config.options.textLimit : 130;
+            }
             this.moreInfoItemTemplate = $('<div class="item">\
                                            <div class="header"></div>\
                                            <div class="text"></div>\
                                        </div>');
             this.$items = $('<div class="items"></div>');
             this.$main.append(this.$items);
+            this.$canvasItems = $('<div class="items"></div>');
+            this.$main.append(this.$canvasItems);
             this.$noData = $('<div class="noData">' + this.content.noData + '</div>');
             this.$main.append(this.$noData);
             this.$expandButton.attr('tabindex', '4');
             this.$collapseButton.attr('tabindex', '4');
             this.setTitle(this.content.title);
+            this.manifestData = this.provider.getMetadata();
+            this.canvasData = [];
+            $.subscribe(BaseCommands.CANVAS_INDEX_CHANGED, function (e, canvasIndex) {
+                var canvas = _this.provider.getCanvasByIndex(canvasIndex);
+                _this.canvasData = canvas.getMetadata();
+                _this.displayInfo();
+            });
         };
         MoreInfoRightPanel.prototype.toggleFinish = function () {
             _super.prototype.toggleFinish.call(this);
@@ -3001,28 +3022,17 @@ define('modules/uv-moreinforightpanel-module/MoreInfoRightPanel',["require", "ex
         MoreInfoRightPanel.prototype.getInfo = function () {
             // show loading icon.
             this.$main.addClass('loading');
-            var data = this.provider.getMetadata();
-            this.displayInfo(data);
+            this.displayInfo();
         };
-        MoreInfoRightPanel.prototype.displayInfo = function (data) {
-            var _this = this;
+        MoreInfoRightPanel.prototype.displayInfo = function () {
             this.$main.removeClass('loading');
-            if (!data) {
+            if (this.manifestData.length == 0 && this.canvasData.length == 0) {
                 this.$noData.show();
                 return;
             }
             this.$noData.hide();
-            var limitType = "lines";
-            if (this.config.options.textLimitType) {
-                limitType = this.config.options.textLimitType;
-            }
-            var limit;
-            if (limitType === "lines") {
-                limit = this.config.options.textLimit ? this.config.options.textLimit : 4;
-            }
-            else if (limitType === "chars") {
-                limit = this.config.options.textLimit ? this.config.options.textLimit : 130;
-            }
+            var manifestRenderData = $.extend(true, [], this.manifestData);
+            var canvasRenderData = $.extend(true, [], this.canvasData);
             var displayOrderConfig = this.options.displayOrder;
             if (displayOrderConfig) {
                 displayOrderConfig = displayOrderConfig.toLowerCase();
@@ -3031,17 +3041,17 @@ define('modules/uv-moreinforightpanel-module/MoreInfoRightPanel',["require", "ex
                 // sort items
                 var sorted = [];
                 _.each(displayOrder, function (item) {
-                    var match = data.en().where((function (x) { return x.label.toLowerCase() === item; })).first();
+                    var match = manifestRenderData.en().where((function (x) { return x.label.toLowerCase() === item; })).first();
                     if (match) {
                         sorted.push(match);
-                        data.remove(match);
+                        manifestRenderData.remove(match);
                     }
                 });
                 // add remaining items that were not in the displayOrder.
-                _.each(data, function (item) {
+                _.each(manifestRenderData, function (item) {
                     sorted.push(item);
                 });
-                data = sorted;
+                manifestRenderData = sorted;
             }
             // Exclusions
             var excludeConfig = this.options.exclude;
@@ -3050,15 +3060,15 @@ define('modules/uv-moreinforightpanel-module/MoreInfoRightPanel',["require", "ex
                 excludeConfig = excludeConfig.replace(/ /g, "");
                 var exclude = excludeConfig.split(',');
                 _.each(exclude, function (item) {
-                    var match = data.en().where((function (x) { return x.label.toLowerCase() === item; })).first();
+                    var match = manifestRenderData.en().where((function (x) { return x.label.toLowerCase() === item; })).first();
                     if (match) {
-                        data.remove(match);
+                        manifestRenderData.remove(match);
                     }
                 });
             }
             // flatten metadata into array.
             var flattened = [];
-            _.each(data, function (item) {
+            _.each(manifestRenderData, function (item) {
                 if (_.isArray(item.value)) {
                     flattened = flattened.concat(item.value);
                 }
@@ -3066,17 +3076,50 @@ define('modules/uv-moreinforightpanel-module/MoreInfoRightPanel',["require", "ex
                     flattened.push(item);
                 }
             });
-            data = flattened;
-            _.each(data, function (item) {
-                var built = _this.buildItem(item);
-                _this.$items.append(built);
-                if (limitType === "lines") {
-                    built.find('.text').toggleExpandTextByLines(limit, _this.content.less, _this.content.more);
-                }
-                else if (limitType === "chars") {
-                    built.find('.text').ellipsisHtmlFixed(limit, null);
-                }
+            manifestRenderData = flattened;
+            if (this.config.options.aggregateValues) {
+                this.aggregateValues(manifestRenderData, canvasRenderData);
+            }
+            this.renderElement(this.$items, manifestRenderData, this.content.manifestHeader);
+            this.renderElement(this.$canvasItems, canvasRenderData, this.content.canvasHeader);
+        };
+        MoreInfoRightPanel.prototype.aggregateValues = function (fromData, toData) {
+            var values = this.config.options.aggregateValues.split(",");
+            _.each(toData, function (item) {
+                _.each(values, function (value) {
+                    value = value.trim();
+                    if (item.label.toLowerCase() == value.toLowerCase()) {
+                        var manifestIndex = _.findIndex(fromData, function (x) { return x.label.toLowerCase() == value.toLowerCase(); });
+                        if (manifestIndex != -1) {
+                            var data = fromData.splice(manifestIndex, 1)[0];
+                            item.value = data.value + item.value;
+                        }
+                    }
+                });
             });
+        };
+        MoreInfoRightPanel.prototype.renderElement = function (element, data, header) {
+            var _this = this;
+            element.empty();
+            if (data.length !== 0) {
+                if (header)
+                    element.append(this.buildHeader(header));
+                _.each(data, function (item) {
+                    var built = _this.buildItem(item);
+                    element.append(built);
+                    if (_this.limitType === "lines") {
+                        built.find('.text').toggleExpandTextByLines(_this.limit, _this.content.less, _this.content.more);
+                    }
+                    else if (_this.limitType === "chars") {
+                        built.find('.text').ellipsisHtmlFixed(_this.limit, null);
+                    }
+                });
+            }
+        };
+        MoreInfoRightPanel.prototype.buildHeader = function (label) {
+            var $header = $('<div class="header"></div>');
+            $header.html(this.provider.sanitize(label));
+            return $header;
         };
         MoreInfoRightPanel.prototype.buildItem = function (item) {
             var $elem = this.moreInfoItemTemplate.clone();
@@ -3120,7 +3163,7 @@ define('modules/uv-moreinforightpanel-module/MoreInfoRightPanel',["require", "ex
 });
 
 define('_Version',["require", "exports"], function (require, exports) {
-    exports.Version = '1.7.4';
+    exports.Version = '1.7.6';
 });
 
 var __extends = (this && this.__extends) || function (d, b) {
@@ -3430,6 +3473,13 @@ define('modules/uv-contentleftpanel-module/GalleryView',["require", "exports", "
             return thumbs;
         };
         GalleryView.prototype._multiSelectStateChange = function (state) {
+            this.multiSelectState = state;
+            if (state.enabled) {
+                this.$thumbs.addClass("multiSelect");
+            }
+            else {
+                this.$thumbs.removeClass("multiSelect");
+            }
             for (var j = 0; j < state.canvases.length; j++) {
                 var canvas = state.canvases[j];
                 var thumb = this._getThumbByCanvas(canvas);
@@ -4246,18 +4296,18 @@ define('modules/uv-contentleftpanel-module/ContentLeftPanel',["require", "export
             $.subscribe(Commands.EXIT_MULTISELECT_MODE, function () {
                 that._reset();
                 that.multiSelectState.enabled = false;
-                $.publish(Commands.MULTISELECT_CHANGE, [_this.multiSelectState]);
+                $.publish(Commands.MULTISELECT_CHANGE, [that.multiSelectState]);
                 that.setTitle(that.content.title);
-                _this.$multiSelectOptions.hide();
+                that.$multiSelectOptions.hide();
             });
             $.subscribe(BaseCommands.LEFTPANEL_COLLAPSE_FULL_START, function () {
-                if (_this.multiSelectState.enabled) {
+                if (that.multiSelectState.enabled) {
                     $.publish(Commands.EXIT_MULTISELECT_MODE);
                 }
             });
             $.subscribe(BaseCommands.LEFTPANEL_EXPAND_FULL_START, function () {
-                if (_this.multiSelectState.enabled) {
-                    _this._showMultiSelectOptions();
+                if (that.multiSelectState.enabled) {
+                    that._showMultiSelectOptions();
                 }
             });
             $.subscribe(Commands.TREE_NODE_MULTISELECTED, function (s, node) {
@@ -6908,6 +6958,8 @@ define('modules/uv-seadragoncenterpanel-module/SeadragonCenterPanel',["require",
             });
             this.title = this.extension.provider.getTitle();
             this.createNavigationButtons();
+            this.hidePrevButton();
+            this.hideNextButton();
             // if firefox, hide rotation and prev/next until this is resolved
             //var browser = window.browserDetect.browser;
             //if (browser == 'Firefox') {
@@ -6921,8 +6973,6 @@ define('modules/uv-seadragoncenterpanel-module/SeadragonCenterPanel',["require",
             this.resize();
         };
         SeadragonCenterPanel.prototype.createNavigationButtons = function () {
-            if (!this.provider.isMultiCanvas())
-                return;
             this.$leftButton = $('<div class="paging btn prev"></div>');
             this.$leftButton.prop('title', this.content.previous);
             this.viewer.addControl(this.$leftButton[0], { anchor: OpenSeadragon.ControlAnchor.TOP_LEFT });
@@ -7050,11 +7100,9 @@ define('modules/uv-seadragoncenterpanel-module/SeadragonCenterPanel',["require",
                     this.goHome();
                 }
             }
-            if (this.provider.isContinuous()) {
-                this.hidePrevButton();
-                this.hideNextButton();
-            }
-            else if (this.provider.isMultiCanvas()) {
+            if (this.provider.isMultiCanvas() && !this.provider.isContinuous()) {
+                this.showPrevButton();
+                this.showNextButton();
                 $('.navigator').addClass('extraMargin');
                 if (!this.provider.isFirstCanvas()) {
                     this.enablePrevButton();
@@ -7204,6 +7252,7 @@ define('modules/uv-seadragoncenterpanel-module/SeadragonCenterPanel',["require",
             return newRects;
         };
         SeadragonCenterPanel.prototype.resize = function () {
+            var _this = this;
             _super.prototype.resize.call(this);
             this.$viewer.height(this.$content.height() - this.$viewer.verticalMargins());
             this.$viewer.width(this.$content.width() - this.$viewer.horizontalMargins());
@@ -7219,15 +7268,19 @@ define('modules/uv-seadragoncenterpanel-module/SeadragonCenterPanel',["require",
                 this.$leftButton.css('top', (this.$content.height() - this.$leftButton.height()) / 2);
                 this.$rightButton.css('top', (this.$content.height() - this.$rightButton.height()) / 2);
             }
-            // stretch navigator
-            if (this.provider.isContinuous()) {
-                if (this.provider.isHorizontallyAligned()) {
-                    this.$navigator.width(this.$viewer.width() - this.$viewer.rightMargin());
+            // stretch navigator, allowing time for OSD to resize
+            setTimeout(function () {
+                if (_this.provider.isContinuous()) {
+                    if (_this.provider.isHorizontallyAligned()) {
+                        var width = _this.$viewer.width() - _this.$viewer.rightMargin();
+                        console.log(width);
+                        _this.$navigator.width(width);
+                    }
+                    else {
+                        _this.$navigator.height(_this.$viewer.height());
+                    }
                 }
-                else {
-                    this.$navigator.height(this.$viewer.height());
-                }
-            }
+            }, 100);
         };
         SeadragonCenterPanel.prototype.setFocus = function () {
             var $canvas = $(this.viewer.canvas);
@@ -9101,11 +9154,17 @@ var Manifesto;
         ServiceProfile.STANFORDIIIF1IMAGECONFORMANCE1 = new ServiceProfile("http://library.stanford.edu/iiif/image-api/1.1/conformance.html#level1");
         ServiceProfile.STANFORDIIIF1IMAGECONFORMANCE2 = new ServiceProfile("http://library.stanford.edu/iiif/image-api/1.1/conformance.html#level2");
         ServiceProfile.IIIF1IMAGELEVEL0 = new ServiceProfile("http://iiif.io/api/image/1/level0.json");
+        ServiceProfile.IIIF1IMAGELEVEL0PROFILE = new ServiceProfile("http://iiif.io/api/image/1/profiles/level0.json");
         ServiceProfile.IIIF1IMAGELEVEL1 = new ServiceProfile("http://iiif.io/api/image/1/level1.json");
+        ServiceProfile.IIIF1IMAGELEVEL1PROFILE = new ServiceProfile("http://iiif.io/api/image/1/profiles/level1.json");
         ServiceProfile.IIIF1IMAGELEVEL2 = new ServiceProfile("http://iiif.io/api/image/1/level2.json");
+        ServiceProfile.IIIF1IMAGELEVEL2PROFILE = new ServiceProfile("http://iiif.io/api/image/1/profiles/level2.json");
         ServiceProfile.IIIF2IMAGELEVEL0 = new ServiceProfile("http://iiif.io/api/image/2/level0.json");
+        ServiceProfile.IIIF2IMAGELEVEL0PROFILE = new ServiceProfile("http://iiif.io/api/image/2/profiles/level0.json");
         ServiceProfile.IIIF2IMAGELEVEL1 = new ServiceProfile("http://iiif.io/api/image/2/level1.json");
+        ServiceProfile.IIIF2IMAGELEVEL1PROFILE = new ServiceProfile("http://iiif.io/api/image/2/profiles/level1.json");
         ServiceProfile.IIIF2IMAGELEVEL2 = new ServiceProfile("http://iiif.io/api/image/2/level2.json");
+        ServiceProfile.IIIF2IMAGELEVEL2PROFILE = new ServiceProfile("http://iiif.io/api/image/2/profiles/level2.json");
         ServiceProfile.IXIF = new ServiceProfile("http://wellcomelibrary.org/ld/ixif/0/alpha.json");
         ServiceProfile.LOGIN = new ServiceProfile("http://iiif.io/api/auth/0/login");
         ServiceProfile.LOGOUT = new ServiceProfile("http://iiif.io/api/auth/0/logout");
@@ -9311,11 +9370,15 @@ var Manifesto;
                         profile === Manifesto.ServiceProfile.STANFORDIIIF1IMAGECONFORMANCE1.toString() ||
                         profile === Manifesto.ServiceProfile.STANFORDIIIF1IMAGECONFORMANCE2.toString() ||
                         profile === Manifesto.ServiceProfile.IIIF1IMAGELEVEL1.toString() ||
-                        profile === Manifesto.ServiceProfile.IIIF1IMAGELEVEL2.toString()) {
+                        profile === Manifesto.ServiceProfile.IIIF1IMAGELEVEL1PROFILE.toString() ||
+                        profile === Manifesto.ServiceProfile.IIIF1IMAGELEVEL2.toString() ||
+                        profile === Manifesto.ServiceProfile.IIIF1IMAGELEVEL2PROFILE.toString()) {
                         uri = id + 'full/' + width + ',' + height + '/0/native.jpg';
                     }
                     else if (profile === Manifesto.ServiceProfile.IIIF2IMAGELEVEL1.toString() ||
-                        profile === Manifesto.ServiceProfile.IIIF2IMAGELEVEL2.toString()) {
+                        profile === Manifesto.ServiceProfile.IIIF2IMAGELEVEL1PROFILE.toString() ||
+                        profile === Manifesto.ServiceProfile.IIIF2IMAGELEVEL2.toString() ||
+                        profile === Manifesto.ServiceProfile.IIIF2IMAGELEVEL2PROFILE.toString()) {
                         uri = id + 'full/' + width + ',' + height + '/0/default.jpg';
                     }
                 }
@@ -10456,11 +10519,17 @@ global.manifesto = module.exports = {
             profile.toString() === Manifesto.ServiceProfile.STANFORDIIIF1IMAGECONFORMANCE1.toString() ||
             profile.toString() === Manifesto.ServiceProfile.STANFORDIIIF1IMAGECONFORMANCE2.toString() ||
             profile.toString() === Manifesto.ServiceProfile.IIIF1IMAGELEVEL0.toString() ||
+            profile.toString() === Manifesto.ServiceProfile.IIIF1IMAGELEVEL0PROFILE.toString() ||
             profile.toString() === Manifesto.ServiceProfile.IIIF1IMAGELEVEL1.toString() ||
+            profile.toString() === Manifesto.ServiceProfile.IIIF1IMAGELEVEL1PROFILE.toString() ||
             profile.toString() === Manifesto.ServiceProfile.IIIF1IMAGELEVEL2.toString() ||
+            profile.toString() === Manifesto.ServiceProfile.IIIF1IMAGELEVEL2PROFILE.toString() ||
             profile.toString() === Manifesto.ServiceProfile.IIIF2IMAGELEVEL0.toString() ||
+            profile.toString() === Manifesto.ServiceProfile.IIIF2IMAGELEVEL0PROFILE.toString() ||
             profile.toString() === Manifesto.ServiceProfile.IIIF2IMAGELEVEL1.toString() ||
-            profile.toString() === Manifesto.ServiceProfile.IIIF2IMAGELEVEL2.toString()) {
+            profile.toString() === Manifesto.ServiceProfile.IIIF2IMAGELEVEL1PROFILE.toString() ||
+            profile.toString() === Manifesto.ServiceProfile.IIIF2IMAGELEVEL2.toString() ||
+            profile.toString() === Manifesto.ServiceProfile.IIIF2IMAGELEVEL2PROFILE.toString()) {
             return true;
         }
         return false;

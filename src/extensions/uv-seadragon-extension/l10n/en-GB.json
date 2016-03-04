@@ -113,7 +113,9 @@
         "logo": "Logo",
         "more": "more",
         "noData": "No data to display",
-        "title": "Information"
+        "title": "More Information",
+        "manifestHeader": "About the book",
+        "canvasHeader": "About the image"
       }
     },
     "pagingHeaderPanel": {
@@ -153,6 +155,11 @@
         "rotateRight": "Rotate Right",
         "zoomIn": "Zoom In",
         "zoomOut": "Zoom Out"
+      }
+    },
+    "restrictedDialogue": {
+      "content": {
+        "cancel": "Cancel"
       }
     },
     "searchFooterPanel":

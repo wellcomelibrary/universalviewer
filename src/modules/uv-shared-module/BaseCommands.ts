@@ -18,9 +18,9 @@ class Commands {
     static END: string                              = Commands.namespace + 'onEnd';
     static ESCAPE: string                           = Commands.namespace + 'onEscape';
     static EXTERNAL_LINK_CLICKED: string            = Commands.namespace + 'onExternalLinkClicked';
+    static FORBIDDEN: string                        = Commands.namespace + 'onForbidden';
     static FEEDBACK: string                         = Commands.namespace + 'onFeedback';
     static PARENT_EXIT_FULLSCREEN: string           = Commands.namespace + 'onParentExitFullScreen';
-    static HIDE_CLICKTHROUGH_DIALOGUE: string       = Commands.namespace + 'onHideClickthroughDialogue';
     static HIDE_DOWNLOAD_DIALOGUE: string           = Commands.namespace + 'onHideDownloadDialogue';
     static HIDE_EMBED_DIALOGUE: string              = Commands.namespace + 'onHideEmbedDialogue';
     static HIDE_EXTERNALCONTENT_DIALOGUE: string    = Commands.namespace + 'onHideExternalContentDialogue';
@@ -28,6 +28,8 @@ class Commands {
     static HIDE_HELP_DIALOGUE: string               = Commands.namespace + 'onHideHelpDialogue';
     static HIDE_INFORMATION: string                 = Commands.namespace + 'onHideInformation';
     static HIDE_LOGIN_DIALOGUE: string              = Commands.namespace + 'onHideLoginDialogue';
+    static HIDE_CLICKTHROUGH_DIALOGUE: string       = Commands.namespace + 'onHideClickthroughDialogue';
+    static HIDE_RESTRICTED_DIALOGUE: string         = Commands.namespace + 'onHideRestrictedDialogue';
     static HIDE_OVERLAY: string                     = Commands.namespace + 'onHideOverlay';
     static HIDE_SETTINGS_DIALOGUE: string           = Commands.namespace + 'onHideSettingsDialogue';
     static HOME: string                             = Commands.namespace + 'onHome';
@@ -37,6 +39,7 @@ class Commands {
     static LEFTPANEL_EXPAND_FULL_FINISH: string     = Commands.namespace + 'onLeftPanelExpandFullFinish';
     static LEFTPANEL_EXPAND_FULL_START: string      = Commands.namespace + 'onLeftPanelExpandFullStart';
     static LOAD: string                             = Commands.namespace + 'onLoad';
+    static LOAD_FAILED: string                      = Commands.namespace + 'onLoadFailed';
     static MINUS: string                            = Commands.namespace + 'onMinus';
     static NOT_FOUND: string                        = Commands.namespace + 'onNotFound';
     static OPEN: string                             = Commands.namespace + 'onOpen';
@@ -51,6 +54,7 @@ class Commands {
     static RESIZE: string                           = Commands.namespace + 'onResize';
     static RESOURCE_DEGRADED: string                = Commands.namespace + 'onResourceDegraded';
     static RETURN: string                           = Commands.namespace + 'onReturn';
+    static RETRY: string                            = Commands.namespace + 'onRetry';
     static RIGHT_ARROW: string                      = Commands.namespace + 'onRightArrow';
     static RIGHTPANEL_COLLAPSE_FULL_FINISH: string  = Commands.namespace + 'onRightPanelCollapseFullFinish';
     static RIGHTPANEL_COLLAPSE_FULL_START: string   = Commands.namespace + 'onRightPanelCollapseFullStart';
@@ -58,7 +62,6 @@ class Commands {
     static RIGHTPANEL_EXPAND_FULL_START: string     = Commands.namespace + 'onRightPanelExpandFullStart';
     static SEQUENCE_INDEX_CHANGED: string           = Commands.namespace + 'onSequenceIndexChanged';
     static SETTINGS_CHANGED: string                 = Commands.namespace + 'onSettingsChanged';
-    static SHOW_CLICKTHROUGH_DIALOGUE: string       = Commands.namespace + 'onShowClickThroughDialogue';
     static SHOW_DOWNLOAD_DIALOGUE: string           = Commands.namespace + 'onShowDownloadDialogue';
     static SHOW_EMBED_DIALOGUE: string              = Commands.namespace + 'onShowEmbedDialogue';
     static SHOW_EXTERNALCONTENT_DIALOGUE: string    = Commands.namespace + 'onShowExternalContentDialogue';
@@ -66,6 +69,8 @@ class Commands {
     static SHOW_HELP_DIALOGUE: string               = Commands.namespace + 'onShowHelpDialogue';
     static SHOW_INFORMATION: string                 = Commands.namespace + 'onShowInformation';
     static SHOW_LOGIN_DIALOGUE: string              = Commands.namespace + 'onShowLoginDialogue';
+    static SHOW_CLICKTHROUGH_DIALOGUE: string       = Commands.namespace + 'onShowClickThroughDialogue';
+    static SHOW_RESTRICTED_DIALOGUE: string         = Commands.namespace + 'onShowRestrictedDialogue';
     static SHOW_OVERLAY: string                     = Commands.namespace + 'onShowOverlay';
     static SHOW_SETTINGS_DIALOGUE: string           = Commands.namespace + 'onShowSettingsDialogue';
     static THUMB_SELECTED: string                   = Commands.namespace + 'onThumbSelected';
