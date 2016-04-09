@@ -66,25 +66,25 @@ class Extension extends BaseExtension {
             }
         });
 
-        $.subscribe(Commands.DOWNLOAD_CURRENTVIEW, (e) => {
-            this.triggerSocket(Commands.DOWNLOAD_CURRENTVIEW);
-        });
-
-        $.subscribe(Commands.DOWNLOAD_ENTIREDOCUMENTASPDF, (e) => {
-            this.triggerSocket(Commands.DOWNLOAD_ENTIREDOCUMENTASPDF);
-        });
-
-        $.subscribe(Commands.DOWNLOAD_ENTIREDOCUMENTASTEXT, (e) => {
-            this.triggerSocket(Commands.DOWNLOAD_ENTIREDOCUMENTASTEXT);
-        });
-
-        $.subscribe(Commands.DOWNLOAD_WHOLEIMAGEHIGHRES, (e) => {
-            this.triggerSocket(Commands.DOWNLOAD_WHOLEIMAGEHIGHRES);
-        });
-
-        $.subscribe(Commands.DOWNLOAD_WHOLEIMAGELOWRES, (e) => {
-            this.triggerSocket(Commands.DOWNLOAD_WHOLEIMAGELOWRES);
-        });
+        //$.subscribe(Commands.DOWNLOAD_CURRENTVIEW, (e) => {
+        //    this.triggerSocket(Commands.DOWNLOAD_CURRENTVIEW);
+        //});
+        //
+        //$.subscribe(Commands.DOWNLOAD_ENTIREDOCUMENTASPDF, (e) => {
+        //    this.triggerSocket(Commands.DOWNLOAD_ENTIREDOCUMENTASPDF);
+        //});
+        //
+        //$.subscribe(Commands.DOWNLOAD_ENTIREDOCUMENTASTEXT, (e) => {
+        //    this.triggerSocket(Commands.DOWNLOAD_ENTIREDOCUMENTASTEXT);
+        //});
+        //
+        //$.subscribe(Commands.DOWNLOAD_WHOLEIMAGEHIGHRES, (e) => {
+        //    this.triggerSocket(Commands.DOWNLOAD_WHOLEIMAGEHIGHRES);
+        //});
+        //
+        //$.subscribe(Commands.DOWNLOAD_WHOLEIMAGELOWRES, (e) => {
+        //    this.triggerSocket(Commands.DOWNLOAD_WHOLEIMAGELOWRES);
+        //});
 
         $.subscribe(BaseCommands.END, (e) => {
             this.viewPage(this.provider.getLastPageIndex());
@@ -99,7 +99,7 @@ class Extension extends BaseExtension {
             this.triggerSocket(Commands.GALLERY_THUMB_SELECTED);
         });
 
-        $.subscribe(BaseCommands.HOME, (e) => {;
+        $.subscribe(BaseCommands.HOME, (e) => {
             this.viewPage(this.provider.getFirstPageIndex());
         });
 
@@ -121,7 +121,7 @@ class Extension extends BaseExtension {
             }
         });
 
-        $.subscribe(BaseCommands.LEFTPANEL_COLLAPSE_FULL_FINISH, (e) => {;
+        $.subscribe(BaseCommands.LEFTPANEL_COLLAPSE_FULL_FINISH, (e) => {
             Shell.$centerPanel.show();
             Shell.$rightPanel.show();
             this.resize();
@@ -525,8 +525,8 @@ class Extension extends BaseExtension {
         bookmark.index = this.provider.canvasIndex;
         bookmark.label = canvas.getLabel();
         bookmark.path = (<ISeadragonProvider>this.provider).getCroppedImageUri(canvas, this.getViewer());
-        bookmark.thumb = canvas.getThumbUri(this.provider.config.options.bookmarkThumbWidth, this.provider.config.options.bookmarkThumbHeight);
-        bookmark.title = this.provider.getTitle();
+        bookmark.thumb = canvas.getCanonicalImageUri(this.provider.config.options.bookmarkThumbWidth);
+        bookmark.title = this.provider.getLabel();
         bookmark.type = manifesto.ElementType.image().toString();
 
         this.triggerSocket(BaseCommands.BOOKMARK, bookmark);

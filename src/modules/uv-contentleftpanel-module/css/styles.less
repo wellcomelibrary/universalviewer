@@ -276,10 +276,14 @@
                     }
 
                     &.left-to-right{
-                        .thumb{
-                            &.first{
-                                float: right;
+                        &.paged{
+                            .thumb{
+                                &.first{
+                                    float: right;
+                                }
                             }
+                        }
+                        .thumb{
                             float: left;
                         }
                     }
@@ -330,18 +334,86 @@
                         overflow: hidden;
                         position: relative;
 
+                        // all thumb spacing-related styles
+
+                        &.multiSelect{
+                            .thumb {
+                                .wrap {
+                                    &.multiSelected {
+                                        border: 2px solid @brand-primary;
+                                    }
+                                }
+                            }
+                        }
+
+                        &.chunked{
+                            .thumb{
+                                &.outsideScrollArea{
+                                    .wrap{
+                                        border: 2px solid transparent;
+                                        img{
+                                            display: none;
+                                        }
+                                    }
+
+                                    span{
+                                        color: transparent;
+                                    }
+                                }
+
+                                &.outsideScrollArea.selected{
+                                    .wrap{
+                                        border: 2px solid transparent;
+                                    }
+                                }
+                            }
+                        }
+
+                        &.chunked.multiSelect{
+                            .thumb {
+                                &.outsideScrollArea {
+                                    .wrap {
+                                        &.multiSelected {
+                                            background: none;
+                                            border: 2px solid transparent;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // all spacing-related thumb styles
                         .thumb{
                             margin: 0 7px 7px 0;
-                            float: left;
-                            cursor: pointer;
-                            //max-height: 200px;
 
                             .wrap{
                                 border: 2px solid @panel-border-color;
                                 padding: 2px;
-                                //max-height: 200px;
+                            }
+
+                            &.selected{
+                                .wrap{
+                                    border: 2px solid #fff;
+                                }
+                            }
+
+                            &.searchpreview{
+                                .wrap{
+                                    border: 2px solid @link-color;
+                                }
+                            }
+
+                            span{
+                                padding: 2px 0 0 0;
+                            }
+                        }
+
+                        .thumb{
+                            float: left;
+                            cursor: pointer;
+
+                            .wrap{
                                 overflow: hidden;
-                                //width: 98px;
                                 text-align: center;
                                 background: none;
 
@@ -368,25 +440,10 @@
                                 }
                             }
 
-                            &.selected{
-
-                                .wrap{
-                                    border: 2px solid #fff;
-                                }
-                            }
-
-                            &.searchpreview{
-
-                                .wrap{
-                                    border: 2px solid @link-color;
-                                }
-                            }
-
                             span{
                                 font-size: @font-size-small;
                                 color: #fff;
                                 display: block;
-                                padding: 2px 0 0 0;
                             }
 
                             .label {
@@ -406,7 +463,6 @@
                             .thumb {
                                 .wrap {
                                     &.multiSelected {
-                                        border: 2px solid @brand-primary;
                                         background: @brand-primary;
 
                                         .thumbImage {

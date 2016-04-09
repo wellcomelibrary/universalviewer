@@ -60,6 +60,10 @@ class ThumbsView extends BaseView {
 
         var that = this;
 
+        if ((<ISeadragonProvider>that.provider).isPaged()) {
+            this.$thumbs.addClass('paged');
+        }
+
         $.templates({
             thumbsTemplate: '<div class="{{:~className()}}" data-src="{{>uri}}" data-visible="{{>visible}}">\
                                 <div class="wrap" style="height:{{>height + ~extraHeight()}}px"></div>\
@@ -75,12 +79,15 @@ class ThumbsView extends BaseView {
 
         $.views.helpers({
             separator: function(){
-                var viewingDirection = that.provider.getViewingDirection().toString();
-                if (viewingDirection === manifesto.ViewingDirection.topToBottom().toString() || viewingDirection === manifesto.ViewingDirection.bottomToTop().toString()){
+                if ((<ISeadragonProvider>that.provider).isVerticallyAligned()){
                     return true; // one thumb per line
                 }
                 // two thumbs per line
-                return ((this.data.index -1) % 2 == 0) ? false : true;
+                if ((<ISeadragonProvider>that.provider).isPaged()) {
+                    return ((this.data.index - 1) % 2 == 0) ? false : true;
+                }
+
+                return false;
             },
             extraHeight: function(){
                 return extraHeight;
@@ -111,7 +118,7 @@ class ThumbsView extends BaseView {
         // use unevent to detect scroll stop.
         this.$element.on('scroll', () => {
             this.scrollStop();
-        }, 1000);
+        }, 100);
 
         this.resize();
     }
@@ -232,7 +239,7 @@ class ThumbsView extends BaseView {
 
     isPDF(): boolean{
         // todo: use constants
-        return (this.provider.getCanvasType().toString().contains("pdf"));
+        return (this.provider.getElementType().toString().contains("pdf"));
     }
 
     setLabel(): void {
@@ -294,11 +301,11 @@ class ThumbsView extends BaseView {
     }
 
     getThumbByIndex(canvasIndex): JQuery {
-        return $(this.getAllThumbs()[canvasIndex])
+        return $(this.getAllThumbs()[canvasIndex]);
     }
 
     scrollToThumb(canvasIndex: number): void {
-        var $thumb = this.getThumbByIndex(canvasIndex)
+        var $thumb = this.getThumbByIndex(canvasIndex);
         this.$element.scrollTop($thumb.position().top);
     }
     

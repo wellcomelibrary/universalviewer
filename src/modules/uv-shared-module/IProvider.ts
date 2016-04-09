@@ -18,21 +18,23 @@ interface IProvider{
 
     addTimestamp(uri: string): string;
     getAttribution(): string;
-    getCanvases(): Manifesto.ICanvas[];
     getCanvasById(id: string): Manifesto.ICanvas;
-    getCanvasesById(ids: string[]): Manifesto.ICanvas[];
     getCanvasByIndex(index: number): any;
+    getCanvases(): Manifesto.ICanvas[];
+    getCanvasesById(ids: string[]): Manifesto.ICanvas[];
     getCanvasIndexById(id: string): number;
     getCanvasIndexByLabel(label: string): number;
     getCanvasIndexParam(): number;
+    getCanvasMetadata(canvas: Manifesto.ICanvas): IMetadataItem[];
     getCanvasRange(canvas: Manifesto.ICanvas): Manifesto.IRange;
     getCanvasRanges(canvas: Manifesto.ICanvas): Manifesto.IRange[];
-    getCanvasType(canvas?: Manifesto.ICanvas): Manifesto.CanvasType;
     getCollectionIndex(iiifResource: Manifesto.IIIIFResource): number;
     getCurrentCanvas(): Manifesto.ICanvas;
     getCurrentSequence(): Manifesto.ISequence;
+    getElementType(element?: Manifesto.IElement): Manifesto.ElementType;
     getFirstPageIndex(): number;
     getInfoUri(canvas: Manifesto.ICanvas): string;
+    getLabel(): string;
     getLastCanvasLabel(alphanumeric?: boolean): string;
     getLastPageIndex(): number;
     getLicense(): string;
@@ -40,14 +42,14 @@ interface IProvider{
     getManifestType(): Manifesto.ManifestType;
     getMetadata(): IMetadataItem[];
     getPagedIndices(index?: number): number[]; // todo: rename to something generic
-    getRanges(): IRange[];
     getRangeByPath(path: string): Manifesto.IRange;
     getRangeCanvases(range: Manifesto.IRange): Manifesto.ICanvas[];
+    getRanges(): IRange[];
     getSeeAlso(): any;
     getSequenceIndexParam(): number;
+    getShareUrl(): string;
     getStartCanvasIndex(): number;
     getThumbs(width: number, height: number): Manifesto.IThumb[];
-    getTitle(): string;
     getTotalCanvases(): number;
     getTree(): Manifesto.ITreeNode;
     getViewingDirection(): Manifesto.ViewingDirection;
@@ -59,6 +61,7 @@ interface IProvider{
     isMultiSequence(): boolean;
     isSeeAlsoEnabled(): boolean;
     isTotalCanvasesEven(): boolean;
+    lastCanvasIndex: number;
 
     // todo: move these to baseextension?
     bootstrapper: BootStrapper;
@@ -74,7 +77,6 @@ interface IProvider{
     locales: any[];
 
     changeLocale(locale: string): void;
-    defaultToThumbsView(): boolean;
     getAlternateLocale(): any;
     getDomain(): string;
     getEmbedDomain(): string;
