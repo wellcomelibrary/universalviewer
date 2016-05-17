@@ -132,6 +132,7 @@ class BaseExtension implements IExtension {
             $(document).keydown((e) => {
 
                 var event: string = null;
+                var preventDefault: boolean = true;
 
                 if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
                     if (e.keyCode === KeyCodes.KeyDown.Enter) event = BaseCommands.RETURN;
@@ -140,8 +141,14 @@ class BaseExtension implements IExtension {
                     if (e.keyCode === KeyCodes.KeyDown.PageDown) event = BaseCommands.PAGE_DOWN;
                     if (e.keyCode === KeyCodes.KeyDown.End) event = BaseCommands.END;
                     if (e.keyCode === KeyCodes.KeyDown.Home) event = BaseCommands.HOME;
-                    if (e.keyCode === KeyCodes.KeyDown.NumpadPlus || e.keyCode === 171 || e.keyCode === KeyCodes.KeyDown.Equals) event = BaseCommands.PLUS;
-                    if (e.keyCode === KeyCodes.KeyDown.NumpadMinus || e.keyCode === 173 || e.keyCode === KeyCodes.KeyDown.Dash) event = BaseCommands.MINUS;
+                    if (e.keyCode === KeyCodes.KeyDown.NumpadPlus || e.keyCode === 171 || e.keyCode === KeyCodes.KeyDown.Equals) {
+                        event = BaseCommands.PLUS;
+                        preventDefault = false;  
+                    } 
+                    if (e.keyCode === KeyCodes.KeyDown.NumpadMinus || e.keyCode === 173 || e.keyCode === KeyCodes.KeyDown.Dash) {
+                        event = BaseCommands.MINUS;
+                        preventDefault = false;
+                    } 
 
                     if (that.useArrowKeysToNavigate()) {
                         if (e.keyCode === KeyCodes.KeyDown.LeftArrow) event = BaseCommands.LEFT_ARROW;
@@ -152,7 +159,9 @@ class BaseExtension implements IExtension {
                 }
 
                 if (event){
-                    e.preventDefault();
+                    if (preventDefault) {
+                        e.preventDefault();
+                    }
                     $.publish(event);
                 }
             });
@@ -171,6 +180,8 @@ class BaseExtension implements IExtension {
         }
 
         this.$element.append('<a href="/" id="top"></a>');
+
+        this.$element.append('<iframe id="commsFrame" style="display:none"></iframe>');
 
         $.subscribe(BaseCommands.ACCEPT_TERMS, () => {
             this.triggerSocket(BaseCommands.ACCEPT_TERMS);
@@ -903,8 +914,16 @@ class BaseExtension implements IExtension {
     }
 
     getAccessToken(resource: Manifesto.IExternalResource, rejectOnError: boolean): Promise<Manifesto.IAccessToken> {
+
         return new Promise<Manifesto.IAccessToken>((resolve, reject) => {
-            $.getJSON(resource.tokenService.id + "?callback=?", (token: Manifesto.IAccessToken) => {
+            var serviceUri: string = resource.tokenService.id;
+
+            // pick an identifier for this message. We might want to keep track of sent messages
+            var msgId = serviceUri + "|" + new Date().getTime(); //arbitrary
+
+            var receiveAccessToken = (e) => {
+                window.removeEventListener("message", receiveAccessToken);
+                var token = e.data;
                 if (token.error){
                     if(rejectOnError) {
                         reject(token.errorDescription);
@@ -914,14 +933,34 @@ class BaseExtension implements IExtension {
                 } else {
                     resolve(token);
                 }
-            }).fail((error) => {
-                if(rejectOnError) {
-                    reject(error);
-                } else {
-                    resolve(null);
-                }
-            });
+            }
+
+            window.addEventListener("message", receiveAccessToken, false);
+
+            var tokenUri: string = serviceUri + "?messageId=" + msgId;
+            $('#commsFrame').prop('src', tokenUri);
         });
+
+        // deprecated JSONP method - keep this around for reference
+        //return new Promise<Manifesto.IAccessToken>((resolve, reject) => {
+        //    $.getJSON(resource.tokenService.id + "?callback=?", (token: Manifesto.IAccessToken) => {
+        //        if (token.error){
+        //            if(rejectOnError) {
+        //                reject(token.errorDescription);
+        //            } else {
+        //                resolve(null);
+        //            }
+        //        } else {
+        //            resolve(token);
+        //        }
+        //    }).fail((error) => {
+        //        if(rejectOnError) {
+        //            reject(error);
+        //        } else {
+        //            resolve(null);
+        //        }
+        //    });
+        //});
     }
 
     storeAccessToken(resource: Manifesto.IExternalResource, token: Manifesto.IAccessToken, storageStrategy: string): Promise<void> {

@@ -3587,6 +3587,11 @@ input[type=range]:focus::-ms-fill-upper {
   padding: 0 0 0 16px;
   font-weight: bold;
 }
+#app #commsFrame {
+  width: 1px;
+  height: 1px;
+  border: none;
+}
 #app .headerPanel {
   position: relative;
   background-color: #1f1f1f;
@@ -3691,19 +3696,7 @@ input[type=range]:focus::-ms-fill-upper {
   background-color: #000;
 }
 #app .headerPanel .options .centerOptions {
-  width: 432px;
-}
-#app .headerPanel .options .centerOptions .prevOptions {
-  margin: 0 10px 0 0;
-}
-#app .headerPanel .options .centerOptions .mode label {
-  width: 42px;
-}
-#app .headerPanel .options .centerOptions .search {
-  width: 140px;
-}
-#app .headerPanel .options .centerOptions .nextOptions {
-  margin: 0 0 0 10px;
+  width: 385px;
 }
 #app .headerPanel .options .rightOptions .settings {
   background: url('../../img/settings.png');
@@ -3786,7 +3779,6 @@ input[type=range]:focus::-ms-fill-upper {
   text-decoration: none;
 }
 #app .footerPanel .searchPager .controls .searchResultsInfo {
-  width: 290px;
   color: #000;
 }
 #app .footerPanel .searchPager .controls .searchResultsInfo a.clearSearch {
@@ -3825,7 +3817,6 @@ input[type=range]:focus::-ms-fill-upper {
 }
 #app .footerPanel .searchPager .controls {
   margin-top: 0px;
-  width: 635px;
 }
 #app .footerPanel .searchPager .controls .searchResultsInfo {
   width: 340px;
