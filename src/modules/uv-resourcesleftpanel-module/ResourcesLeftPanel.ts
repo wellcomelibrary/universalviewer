@@ -94,10 +94,10 @@ class ResourcesLeftPanel extends LeftPanel {
             height = this.config.options.twoColThumbHeight;
         }
         if (typeof width === "undefined") {
-            width = 100;
+            width = 100; // todo: use config
         }
         if (typeof height === "undefined") {
-            height = 100;
+            height = 100; // todo: use config
         }
         this.thumbsView.thumbs = <IThumb[]>this.provider.getThumbs(width, height);
         // hide thumb selector for single-part manifests
